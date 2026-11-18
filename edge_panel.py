@@ -1,5 +1,5 @@
 """
-V2.0 边缘流水线面板 —— 把工单 03/04/05 写的模块真正接到界面上。
+V2.0 边缘流水线面板 —— 把各能力模块真正接到界面上。
 
 为什么需要这个文件：
     edge/model_service.py（ModelPool + 人体 BBox 重构 + ByteTrack）、
@@ -51,7 +51,6 @@ _FONT_CANDIDATES = [
 ]
 _font_cache: dict = {}
 
-
 def _font(size: int):
     """按字号取字体对象，找不到中文字体就退回默认（英文仍可读）。"""
     from PIL import ImageFont
@@ -66,7 +65,6 @@ def _font(size: int):
             continue
     _font_cache[size] = ImageFont.load_default()
     return _font_cache[size]
-
 
 @lru_cache(maxsize=512)
 def _text_tile(text: str, bgr: tuple, size: int):
@@ -83,7 +81,6 @@ def _text_tile(text: str, bgr: tuple, size: int):
     tile = np.empty((h, w, 3), dtype=np.uint8)
     tile[:] = bgr
     return tile, m
-
 
 def _put_cn(vis: np.ndarray, text: str, x: int, y: int,
             bgr: tuple, size: int = 19) -> None:
@@ -114,7 +111,6 @@ DEMO_OVERRIDE = {
     "loiter": {"loiter_sec": 5.0, "suspect_sec": 2.0},
 }
 
-
 def _load_yaml():
     # 走 config_loader 才会展开 ${CAM01_URL:...} 这类占位，直接 yaml.safe_load
     # 拿到的是字面量，前端就看不到现场 RTSP 地址了。
@@ -122,7 +118,6 @@ def _load_yaml():
 
     data = load_all()
     return data["cameras"], data["rules"]
-
 
 @st.cache_resource(show_spinner=False)
 def _get_dispatcher():
@@ -140,7 +135,6 @@ def _get_dispatcher():
     )
     return disp.start()
 
-
 # 多路页「检测能力」下拉可覆盖相机自带的 scene
 CAP_SCENES = {
     "按相机配置": None,
@@ -150,7 +144,6 @@ CAP_SCENES = {
     "睡岗 / 离岗": ["away", "sleep"],
     "徘徊检测": ["loiter"],
 }
-
 
 @st.cache_resource(show_spinner=False)
 def _get_pipeline(cam_id: str, video: str, demo: bool,
@@ -204,7 +197,6 @@ def _get_pipeline(cam_id: str, video: str, demo: bool,
         verbose=False,
     )
     return pipe, cam_cfg
-
 
 def _draw(frame: np.ndarray, rep, cam_cfg: dict) -> np.ndarray:
     """画框 + ID + 左上角规则状态。
@@ -305,7 +297,6 @@ def _draw(frame: np.ndarray, rep, cam_cfg: dict) -> np.ndarray:
             y += row_h
     return vis
 
-
 def render_edge_pipeline_tab() -> None:
     """规则引擎标签页主体。"""
     cams, _ = _load_yaml()
@@ -331,7 +322,7 @@ def render_edge_pipeline_tab() -> None:
                              key="edge_video")
     with c3:
         demo = st.checkbox("演示阈值（秒级触发）", value=True, key="edge_demo",
-                           help="关掉后按工单正式值：入侵15s / 跌倒10s / 离岗180s / 睡岗60s")
+                           help="关掉后按正式值：入侵15s / 跌倒10s / 离岗180s / 睡岗60s")
         max_frames = st.number_input("最多帧数（0=全部）", 0, 3000, 200, 50, key="edge_max")
 
     b1, b2, b3 = st.columns([1, 1, 3])

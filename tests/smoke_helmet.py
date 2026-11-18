@@ -20,7 +20,6 @@ if not VIDEO.exists():
     print(f"[SKIP] 缺少演示视频: {VIDEO}（见 datasets/videos/README.md）")
     raise SystemExit(0)
 
-
 def grab(seconds: float):
     cap = cv2.VideoCapture(str(VIDEO))
     cap.set(cv2.CAP_PROP_POS_MSEC, seconds * 1000)
@@ -29,7 +28,6 @@ def grab(seconds: float):
     if not ok:
         raise SystemExit(f"读不到视频帧：{VIDEO}")
     return frame
-
 
 def main() -> int:
     scene = get_scene(load_config(), "helmet")
@@ -55,7 +53,6 @@ def main() -> int:
     print(f"{'yolo(engine)':10s} boxes={len(out):2d}  "
           f"{(time.perf_counter() - t0) * 1000:6.1f} ms")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

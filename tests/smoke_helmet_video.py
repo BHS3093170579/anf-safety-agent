@@ -22,7 +22,6 @@ if not VIDEO.exists():
     print(f"[SKIP] 缺少演示视频: {VIDEO}（见 datasets/videos/README.md）")
     raise SystemExit(0)
 
-
 def main() -> int:
     scene = get_scene(load_config(), "helmet")
     scene["conf"] = 0.08
@@ -54,7 +53,6 @@ def main() -> int:
         print(f"{pipeline:10s} 平均 {total / len(frames):6.1f} ms/帧  "
               f"违规框合计 {violations:3d}  有违规的帧 {frames_with}/{len(frames)}")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

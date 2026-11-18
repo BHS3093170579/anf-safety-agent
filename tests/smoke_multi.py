@@ -7,7 +7,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-
 def main() -> int:
     from streamlit.testing.v1 import AppTest
 
@@ -25,7 +24,6 @@ def main() -> int:
     print("能力下拉:", [s.key for s in at.selectbox if "multi_cap" in (s.key or "")])
     print("路数滑块:", [s.key for s in at.slider if s.key == "multi_n"])
     return 1 if errs else 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

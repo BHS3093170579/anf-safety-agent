@@ -1,15 +1,13 @@
 """边缘端五大行为时序判定 + 业务互斥状态机。
 
-工单编号：CV项目-安防智能体-04-边缘端—时序规则引擎与 ID 空间恢复
-
-五条业务规则（工单 2.2）：
+五条业务规则（ 2.2）：
     1. 安全帽违规     5 帧滑窗内未戴帽 ≥3 帧才判违规（挡掉黄色背包/反光衣的单帧误判）
     2. 危险区域入侵   质心落入多边形 ROI，穿行 5s 内不报，停留 15s 报警
     3. 工友跌倒       躯干与竖直夹角 > 30°，持续 2s 降 medium，10s 升 critical
     4. 值班离岗       ROI 内无人累计 180 秒
     5. 值班睡岗       头部下沉比例超阈值 + 持续 60 秒（演示值 8 秒）
 
-业务互斥（工单 2.2 最后一条，也是最容易写错的一条）：
+业务互斥（ 2.2 最后一条，也是最容易写错的一条）：
     判到「离岗」时必须**强制关闭**本机位的睡岗检测——人都不在，
     椅子上的衣物、挂着的反光背心会被当成「头趴在桌上」，必然误报。
     反过来，一旦 ROI 里重新有人，离岗计时清零、睡岗检测重新打开。
@@ -22,7 +20,7 @@
 与 V1.0 的关系：
     V1.0 的规则逻辑写死在 app.py 的 detect 循环里，一路摄像头一套。
     这里抽成纯函数式引擎：输入 tracks，输出判定，不碰画面也不碰模型。
-    所以工单 03 的追踪结果可以直接喂进来，工单 05 的告警中心也能直接消费。
+    所以追踪结果可以直接喂进来，告警中心也能直接消费。
 """
 
 from __future__ import annotations
@@ -41,7 +39,6 @@ NOSE, L_EYE, R_EYE, L_EAR, R_EAR = 0, 1, 2, 3, 4
 L_SHO, R_SHO, L_HIP, R_HIP = 5, 6, 11, 12
 
 NORMAL, SUSPECTED, ABNORMAL = "normal", "suspected", "abnormal"
-
 
 # ============================================================== 数据结构
 @dataclass
@@ -74,12 +71,11 @@ class RuleResult:
             d["detail"] = self.detail
         return d
 
-
 # ============================================================== 几何工具
 def point_in_polygon(x: float, y: float, poly) -> bool:
     """射线法判断点是否在多边形内。
 
-    工单指定用射线法。相比凸包/矩阵判定，射线法对任意凹多边形都成立——
+    既定用射线法。相比凸包/矩阵判定，射线法对任意凹多边形都成立——
     现场的「基坑边缘」「脚手架下方」经常是不规则形状，凹多边形很常见。
     """
     if not poly or len(poly) < 3:
@@ -95,11 +91,9 @@ def point_in_polygon(x: float, y: float, poly) -> bool:
                 inside = not inside
     return inside
 
-
 def scale_polygon(poly, w: float, h: float) -> list[list[float]]:
     """归一化 ROI → 像素坐标。配置里一律存 [0,1]，与分辨率无关。"""
     return [[float(p[0]) * w, float(p[1]) * h] for p in poly]
-
 
 def _kpts(kp) -> np.ndarray | None:
     if kp is None:
@@ -109,9 +103,8 @@ def _kpts(kp) -> np.ndarray | None:
         return None
     return k
 
-
 def hip_center(kp, conf_thr: float = 0.2) -> tuple[float, float] | None:
-    """左右髋中点 = 工单指定的入侵质心。看不到髋时退化到肩中点。"""
+    """左右髋中点 = 既定的入侵质心。看不到髋时退化到肩中点。"""
     k = _kpts(kp)
     if k is None:
         return None
@@ -126,7 +119,6 @@ def hip_center(kp, conf_thr: float = 0.2) -> tuple[float, float] | None:
         return float((k[L_SHO, 0] + k[R_SHO, 0]) / 2), float((k[L_SHO, 1] + k[R_SHO, 1]) / 2)
     return None
 
-
 def shoulder_mid(kp, conf_thr: float = 0.2) -> tuple[float, float] | None:
     k = _kpts(kp)
     if k is None:
@@ -139,7 +131,6 @@ def shoulder_mid(kp, conf_thr: float = 0.2) -> tuple[float, float] | None:
     if ok(L_SHO) and ok(R_SHO):
         return float((k[L_SHO, 0] + k[R_SHO, 0]) / 2), float((k[L_SHO, 1] + k[R_SHO, 1]) / 2)
     return None
-
 
 def torso_angle_deg(kp, conf_thr: float = 0.2) -> float | None:
     """躯干（肩中点→髋中点）与竖直方向的夹角，单位度。
@@ -168,7 +159,6 @@ def torso_angle_deg(kp, conf_thr: float = 0.2) -> float | None:
         return None
     return float(math.degrees(math.atan2(dx, dy)))
 
-
 def head_drop_ratio(kp, conf_thr: float = 0.2) -> float | None:
     """头部下沉比 = (nose.y - shoulder_mid.y) / shoulder_width。
 
@@ -193,15 +183,12 @@ def head_drop_ratio(kp, conf_thr: float = 0.2) -> float | None:
         return None
     return float((k[NOSE, 1] - sy) / shoulder_w)
 
-
 def bbox_center(bbox) -> tuple[float, float]:
     return (float(bbox[0]) + float(bbox[2])) / 2, (float(bbox[1]) + float(bbox[3])) / 2
 
-
 def bbox_bottom_center(bbox) -> tuple[float, float]:
-    """脚底中点。工单要求入侵检测用这个点，避免上半身探入就误报。"""
+    """脚底中点。要求入侵检测用这个点，避免上半身探入就误报。"""
     return (float(bbox[0]) + float(bbox[2])) / 2, float(bbox[3])
-
 
 def clamp_point(x: float, y: float, shape: tuple[int, int] | None) -> tuple[float, float]:
     """把点收进画面内。
@@ -214,7 +201,6 @@ def clamp_point(x: float, y: float, shape: tuple[int, int] | None) -> tuple[floa
         return x, y
     h, w = float(shape[0]), float(shape[1])
     return min(max(x, 0.0), w - 1.0), min(max(y, 0.0), h - 1.0)
-
 
 # ============================================================== 引擎本体
 class RulesEngine:
@@ -249,8 +235,8 @@ class RulesEngine:
         self.cfg_link = rc.get("linkage", {}) or {}
 
         # ---- 规则 1：安全帽滑窗 ----
-        # 工单 04 要求 5 帧滑窗 / ≥3 帧未戴帽；rules.yaml 里的
-        # min_consecutive_frames 是工单 02 留下的连续帧版本，两者取较严的。
+        # 要求 5 帧滑窗 / ≥3 帧未戴帽；rules.yaml 里的
+        # min_consecutive_frames 是早期版本留下的连续帧，两者取较严的。
         self.helmet_window = int(self.cfg_helmet.get("window_frames", 5))
         self.helmet_abnormal = int(self.cfg_helmet.get("abnormal_frames", 3))
         self.helmet_suspect = int(self.cfg_helmet.get("suspect_frames", 2))
@@ -438,7 +424,7 @@ class RulesEngine:
 
         用 V1.0 已验证的 head_drop 指标：(nose.y - shoulder_mid.y) / shoulder_width。
         比值越大 = 头越低。threshold -0.32 / direction greater 在 rules.yaml 里写死，
-        与工单 01 的文档口径一致，不在这里改判据。
+        与文档口径一致，不在这里改判据。
         """
         if not self.sleep_detect_enabled:
             return [RuleResult("sleep", NORMAL, 0.0, "离岗期间强制抑制睡岗", suppressed=True)]
@@ -585,7 +571,7 @@ class RulesEngine:
     def _rule_loiter(self, tracks: list[dict], now: float, demo: bool = False) -> list[RuleResult]:
         """ROI 内停留超时 或 折返次数达标 → 徘徊。
 
-        与工单 10 的跨镜 Re-ID 不是一回事：这里是单路「同一目标在警戒区里
+        与跨镜 Re-ID 不是一回事：这里是单路「同一目标在警戒区里
         反复进出/长时间逗留」。三个防误报手段：
           1. 只算 ROI 内的停留，ROI 外路过不计；
           2. 小孩（框高 < child_ratio × 画面高）按 child_weight 衰减；
@@ -665,7 +651,7 @@ class RulesEngine:
     def _rule_helmet(self, tracks: list[dict], now: float) -> list[RuleResult]:
         """5 帧滑窗，未戴帽帧数 ≥3 才 abnormal。
 
-        工单要求挡掉「黄色背包 / 反光衣头帽」造成的单帧误判——
+        要求挡掉「黄色背包 / 反光衣头帽」造成的单帧误判——
         这类误检的共同特点是只闪一两帧，滑窗投票天然能滤掉。
         """
         out: list[RuleResult] = []
@@ -696,7 +682,7 @@ class RulesEngine:
             else:
                 start = st.violation_timers.setdefault("helmet", now)
                 hold = now - start
-                # 兼容工单 02 的连续帧口径
+                # 兼容连续帧口径
                 if st.counters.get("helmet_consec", 0) < self.helmet_min_consec and bad < self.helmet_abnormal:
                     state = SUSPECTED
 

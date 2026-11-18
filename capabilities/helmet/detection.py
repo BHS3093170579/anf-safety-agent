@@ -8,7 +8,6 @@
 - `cudnn.benchmark` + TF32：固定输入尺寸下自动选最快卷积；
 - 预热两次，首帧开销不计入 FPS。
 
-工单：CV-安防智能体V1.0-03 / CV专高5-11
 """
 from __future__ import annotations
 
@@ -18,7 +17,6 @@ from typing import Any, Dict, List
 from .runtime_env import cudnn_tune, precision_kwargs, resolve_device
 
 logger = logging.getLogger("agents.detection")
-
 
 class DetectionAgent:
     """加载 ultralytics YOLOv8 模型，对 BGR ndarray 推理。

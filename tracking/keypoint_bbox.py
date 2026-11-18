@@ -1,10 +1,8 @@
 """从 17 个骨骼关键点反推人体外接检测框（BBox）。
 
-工单编号：CV项目-安防智能体-03-边缘端—ModelPool+显存控制与人体 BBox 重构追踪
-
-为什么要有这一步（对应工单第 2 节「极限显存瘦身」）：
+为什么要有这一步（对应设计第 2 节「极限显存瘦身」）：
     常规做法是「detect 模型找人 → pose 模型估骨架」两个模型，
-    显存翻倍。工单要求只加载 pose 一个模型，那人的框从哪来？
+    显存翻倍。要求只加载 pose 一个模型，那人的框从哪来？
     答案就是：**从 17 个关键点自己算出外接矩形**。
 
     这样做的附带好处是抗遮挡：detect 模型一旦被人挡住半身就检不到，
@@ -43,7 +41,6 @@ KPT_NAMES = [
 # 至少几个关键点可见才认为这是一个能出框的人
 MIN_VISIBLE_KPTS = 3
 
-
 def _pair_mid(kpts: np.ndarray, conf: np.ndarray, i: int, j: int, thr: float):
     """取两个关键点的中点，都不可见时返回 None。"""
     a, b = conf[i] >= thr, conf[j] >= thr
@@ -54,7 +51,6 @@ def _pair_mid(kpts: np.ndarray, conf: np.ndarray, i: int, j: int, thr: float):
     if b:
         return kpts[j].copy()
     return None
-
 
 def keypoints_to_bbox(
     kpts_xy: np.ndarray,
@@ -147,7 +143,6 @@ def keypoints_to_bbox(
     quality = float(kpts_conf[vis].mean()) * min(1.0, n_vis / 8.0)
     return [x1, y1, x2, y2], quality
 
-
 def bbox_from_result(
     kpts_tensor,
     img_shape: tuple[int, int],
@@ -177,7 +172,6 @@ def bbox_from_result(
         bbox, quality = got
         out.append((bbox, quality, person[:, :2]))
     return out
-
 
 def aspect_ok(bbox: list[float], min_ratio: float = 1.2, max_ratio: float = 6.0) -> bool:
     """人形框的长宽比粗筛，把误检成横躺的框丢掉。"""

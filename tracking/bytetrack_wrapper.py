@@ -1,15 +1,13 @@
 """ByteTrack 跟踪器封装（关键点重构框 → 稳定 track_id → 骨架回填）。
 
-工单编号：CV项目-安防智能体-03-边缘端—ModelPool+显存控制与人体 BBox 重构追踪
-
-核心矛盾（对应工单第 3 节「动态追踪 ID 分配」）：
+核心矛盾（对应设计第 3 节「动态追踪 ID 分配」）：
     Pose 模型逐帧独立推理，同一个人在第 1 帧和第 2 帧没有任何联系。
     要让 track_id 稳定，必须给它配上运动模型 + 外观匹配。
 
 为什么用 ByteTrack：
     工地场景遮挡极多（钢管、脚手架、其他人）。DeepSORT/BoT-SORT 依赖
     ReID 特征，Nano 上跑 ReID 网络显存和算力都吃紧；ByteTrack 只用
-    运动 + 低分框二次关联，零额外显存，正好符合工单的「极限瘦身」约束。
+    运动 + 低分框二次关联，零额外显存，正好符合「极限瘦身」约束。
 
 关键实现点（全部是踩过的坑）：
 1.  **每路视频必须各自持有一个 tracker 实例**
@@ -33,7 +31,6 @@ from pathlib import Path
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
 
 def _load_bt_config(cfg_path: str | Path | None = None):
     """加载 ByteTrack 参数。
@@ -66,7 +63,6 @@ def _load_bt_config(cfg_path: str | Path | None = None):
             match_thresh=0.8,
             fuse_score=True,
         )
-
 
 class PoseByteTracker:
     """一路视频对应一个实例。**不要跨路复用。**

@@ -206,6 +206,8 @@ export DINGDING_WEBHOOK="https://oapi.dingtalk.com/robot/send?access_token=xxx"
 
 三模型同驻显存约 156 MB。
 
+> 想把这个仓库发布到 GitHub？权重走 Releases、仓库设置与自检清单见 [docs/PUBLISH.md](docs/PUBLISH.md)。
+
 ---
 
 ## 目录结构

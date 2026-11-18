@@ -20,7 +20,6 @@ _LEVEL_CN = {
     "low": "低",
 }
 
-
 def _event_text(payload: dict[str, Any]) -> str:
     """把边缘事件拼成一句人能读的推送文案。"""
     level = _LEVEL_CN.get(str(payload.get("severity", "")), str(payload.get("severity", "")))
@@ -32,7 +31,6 @@ def _event_text(payload: dict[str, Any]) -> str:
     snap = payload.get("snapshot_path")
     tail = f"\n证据：{Path(snap).name}" if snap else ""
     return f"安防告警 · {level}\n点位：{cam}\n事件：{msg}{extra}\n告警号：{payload.get('event_id', '')}{tail}"
-
 
 def make_post_fn(jsonl_path: str | Path, webhook_url: str = "",
                  timeout: float = 3.0) -> Callable[[str, dict, float], bool]:

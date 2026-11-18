@@ -12,7 +12,6 @@ sys.path.insert(0, str(ROOT))
 
 FRAMES = int(sys.argv[1]) if len(sys.argv) > 1 else 10
 
-
 def main() -> int:
     from config_loader import load_all
     from edge_panel import _get_pipeline
@@ -62,7 +61,6 @@ def main() -> int:
     for cid in sources:
         print(f"  {cid}: 告警 {alerts[cid]} 条  {states[cid]}")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

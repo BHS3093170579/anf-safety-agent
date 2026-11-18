@@ -12,7 +12,6 @@ sys.path.insert(0, str(ROOT))
 
 FRAMES = int(sys.argv[1]) if len(sys.argv) > 1 else 30
 
-
 def main() -> int:
     from config_loader import load_all
     from edge_panel import _get_pipeline
@@ -61,7 +60,6 @@ def main() -> int:
         if n:
             print(f"  合计 {n} 帧，均值 {t_all / n:.1f} ms/帧（{1000 / (t_all / n):.1f} FPS），告警 {alerts} 条")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

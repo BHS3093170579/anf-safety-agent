@@ -23,7 +23,6 @@ import os
 
 _CONFIGURED = False
 
-
 def _configure_once() -> None:
     global _CONFIGURED
     if _CONFIGURED:
@@ -45,7 +44,6 @@ def _configure_once() -> None:
     root.propagate = False
 
     _CONFIGURED = True
-
 
 def get_logger(name: str) -> logging.Logger:
     """取一个挂在 anf 命名空间下的 logger。"""

@@ -17,7 +17,6 @@ ROOT = HERE.parent
 SKIP_DEFAULT = {"bench.py", "run_all.py", "smoke_multi_rtsp.py"}
 SKIP_CAM = {"smoke_multi_rtsp.py", "smoke_rtsp.py"}
 
-
 def main() -> int:
     with_cam = "--with-cam" in sys.argv
     skip = SKIP_DEFAULT if with_cam else (SKIP_DEFAULT | SKIP_CAM)
@@ -51,7 +50,6 @@ def main() -> int:
     passed = sum(1 for r in rows if r[3])
     print(f"\n通过 {passed}/{len(rows)}，总耗时 {time.time() - t0:.1f}s")
     return 0 if passed == len(rows) else 1
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

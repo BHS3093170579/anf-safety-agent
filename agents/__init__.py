@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-安防智能体 · Agent 包（工单 02 · CV专高5-10）
+安防智能体 · Agent 包
 
 模块划分：
     video_capture  VideoCaptureAgent  读视频、按帧率抽帧

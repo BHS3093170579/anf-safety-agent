@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-VideoCaptureAgent —— 工单编号：CV专高5-10（工单 02 - 任务 3）
+VideoCaptureAgent ——
 
 职责：
     读取视频源并抽帧，支持两种输入：
@@ -34,7 +34,6 @@ from typing import Iterator
 import cv2
 import numpy as np
 
-
 @dataclass
 class FramePacket:
     """一帧的完整信息。"""
@@ -42,7 +41,6 @@ class FramePacket:
     frame: np.ndarray       # BGR 图像
     timestamp: float        # 相对开始的时间（秒）
     source_frame_id: int    # 原始帧号 / 摄像头累计帧数
-
 
 class VideoCaptureAgent:
     """视频采集 Agent：支持视频文件与实时摄像头。"""

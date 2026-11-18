@@ -11,7 +11,6 @@
 对外接口与 `DetectionAgent` 完全一致，直接 `__call__(state) -> {"detections": [...]}`，
 所以 LangGraph / Web / Streamlit 三套入口都能无痛替换。
 
-工单：CV-安防智能体V1.0-03 / CV专高5-11
 """
 from __future__ import annotations
 
@@ -29,7 +28,6 @@ from .iou import _iou
 logger = logging.getLogger("agents.two_stage")
 
 _ROOT = Path(__file__).resolve().parents[2]
-
 
 class TwoStageDetector:
     """人头检测 + 头框分类，输出与 DetectionAgent 相同结构的 detections。

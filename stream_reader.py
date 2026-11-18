@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-多路视频异步流读取器 —— 工单编号：CV项目-安防智能体-02-项目初始化、配置体系与多路视频异步流读取
+多路视频异步流读取器 ——
 
 要解决的三个现场问题：
     1. 一路 RTSP 断线（比如挖掘机把网线铲了），主进程在 cv2.VideoCapture.read()
@@ -41,7 +41,6 @@ from typing import Any, Callable
 import cv2
 import numpy as np
 
-
 # ============================================================
 # 状态与数据结构
 # ============================================================
@@ -52,7 +51,6 @@ class StreamState(str, Enum):
     RECONNECTING = "reconnecting"  # 断流，正在退避重连
     OFFLINE = "offline"          # 重试超过阈值，已注册 stream_offline
     STOPPED = "stopped"          # 主动停止
-
 
 @dataclass
 class FramePacket:
@@ -67,7 +65,6 @@ class FramePacket:
     wall_ts: float               # time.time()，写进报告用
     seq: int                     # 该路第几帧
     source_fps: float = 0.0
-
 
 @dataclass
 class ReaderStats:
@@ -86,7 +83,6 @@ class ReaderStats:
         if self.frames_decoded <= 0:
             return 0.0
         return self.frames_emitted / self.frames_decoded
-
 
 # ============================================================
 # 双缓冲
@@ -138,7 +134,6 @@ class DoubleBuffer:
             self._slots = [None, None]
             self._new_frame.clear()
 
-
 # ============================================================
 # 单路读取线程
 # ============================================================
@@ -148,7 +143,7 @@ class StreamReader(threading.Thread):
     生命周期：
         构造 → start() → [打开流 → 读帧 → 降采样 → 写缓冲] 循环 → stop()
 
-    断流处理（工单要求的指数退避）：
+    断流处理（要求的指数退避）：
         读失败 → state=RECONNECTING → 按 reconnect_delays 退避
         第 1 次等 1s，第 2 次等 2s，第 3 次等 4s …… 最长 60s
         重试次数 ≥ offline_after_retries(默认3) → 注册 stream_offline 事件
@@ -468,8 +463,8 @@ class StreamReader(threading.Thread):
                     })
 
                 # 两个条件任一满足即标记离线：
-                #   ① 连续重试达到 offline_after（工单要求 3 次）
-                #   ② 无新帧时长超过 stall_timeout（工单要求 10 秒）
+                #   ① 连续重试达到 offline_after（要求 3 次）
+                #   ② 无新帧时长超过 stall_timeout（要求 10 秒）
                 if retry >= self.offline_after or stall_sec >= self.stall_timeout:
                     if self.stats.state is not StreamState.OFFLINE:
                         self.stats.state = StreamState.OFFLINE
@@ -568,7 +563,6 @@ class StreamReader(threading.Thread):
             "idle_sec": round(stale, 2) if stale != float("inf") else None,
             "last_error": self.stats.last_error,
         }
-
 
 # ============================================================
 # 多路管理器
@@ -698,9 +692,8 @@ class StreamManager:
     def cam_ids(self) -> list[str]:
         return list(self._readers.keys())
 
-
 # ============================================================
-# 便捷入口：直接跑起来看控制台输出（工单 Case1 / Case2 手工验证用）
+# 便捷入口：直接跑起来看控制台输出（ Case1 / Case2 手工验证用）
 # ============================================================
 def _demo() -> None:
     """命令行冒烟测试：python stream_reader.py [--case1|--case2]"""
@@ -755,7 +748,6 @@ def _demo() -> None:
         print(f"  {s['cam_id']}: {s['state']:12} emitted={s['frames_emitted']:4} "
               f"decoded={s['frames_decoded']:5} 重连={s['reconnects']}")
     mgr.stop()
-
 
 if __name__ == "__main__":
     _demo()

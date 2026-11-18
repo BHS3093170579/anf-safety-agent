@@ -30,7 +30,6 @@ import math
 # 几何计算统一走 agents.geometry，保留旧名字方便调用点不变
 from agents.geometry import bbox_iou as _iou
 
-
 class Track:
     """单条轨迹。
 
@@ -59,7 +58,6 @@ class Track:
     @property
     def confirmed(self) -> bool:
         return self.lost == 0
-
 
 class DetectionStabilizer:
     """

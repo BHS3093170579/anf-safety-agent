@@ -1,7 +1,5 @@
 """边缘端人体检测+追踪服务（ModelPool 共享 + 关键点重构框 + ByteTrack）。
 
-工单编号：CV项目-安防智能体-03-边缘端—ModelPool+显存控制与人体 BBox 重构追踪
-
 这是把三块能力串起来的入口：
     ModelPool（唯一一份 pose 权重）
         ↓ 每帧推理一次
@@ -17,7 +15,7 @@
 性能取舍：
     推理是串行排队的（见 ModelPool 注释）。8 路 × 5FPS = 40 帧/秒，
     单帧 10ms 左右，串行利用率约 40%，完全够用；
-    并发推理虽然看着快，但显存会随线程数翻倍，违背工单前提。
+    并发推理虽然看着快，但显存会随线程数翻倍，违背设计前提。
 """
 
 from __future__ import annotations
@@ -36,7 +34,6 @@ from utils.model_pool import ModelPool
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-
 @dataclass
 class CamResult:
     """一路视频一帧的处理结果。"""
@@ -47,7 +44,6 @@ class CamResult:
     tracks: list[dict] = field(default_factory=list)
     infer_ms: float = 0.0
     pose_count: int = 0
-
 
 class ModelService:
     """对外只暴露 process()，内部共享模型、隔离跟踪状态。"""
@@ -220,7 +216,6 @@ class ModelService:
             "trackers": {c: t.stats() for c, t in self._trackers.items()},
             "frames": dict(self._frames),
         }
-
 
 if __name__ == "__main__":
     import sys

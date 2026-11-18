@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 """线程安全的事件异步分发与上报器。
 
-工单编号：CV项目-安防智能体-05（工单 05 · 监控画面零卡顿上报）
-
 设计要点
 --------
-1. **非阻塞入队**：`push()` 永远不等待网络。队列满（默认 50）时，按工单
+1. **非阻塞入队**：`push()` 永远不等待网络。队列满（默认 50）时，按设计
    要求优先丢弃最老的 `suspected` 记录，保住 `abnormal` 红色高危告警。
 
 2. **后台守护线程**：`DaemonUploader` 用 `while True` 从队列取事件，
    调 `requests.post` 上报。网络慢/断开只影响这个线程，主流水线照常跑。
 
 3. **Pydantic 校验**：事件载荷在入队前用 `AlertEvent` 校验，保证上游
-   构造的 JSON 一定符合规范（工单验收标准第 2 条）。
+   构造的 JSON 一定符合规范（验收标准第 2 条）。
 
 4. **可注入上传函数**：测试时把 `post_fn` 换成本地桩，不需要真网络。
 """
@@ -33,11 +31,10 @@ from pydantic import BaseModel, Field, field_validator
 # ---------------------------------------------------------------------- #
 FEATURE_DIM = 512
 
-
 class AlertEvent(BaseModel):
     """一条待上报的告警事件。
 
-    字段与工单要求一一对应：事件 UUID、摄像头 ID、违规类型、特征向量、抓拍图。
+    字段与要求一一对应：事件 UUID、摄像头 ID、违规类型、特征向量、抓拍图。
     """
 
     event_id: str = Field(default_factory=lambda: uuid.uuid4().hex, description="事件唯一 ID")
@@ -71,7 +68,6 @@ class AlertEvent(BaseModel):
     def to_json(self) -> str:
         return json.dumps(self.to_payload(), ensure_ascii=False)
 
-
 # ---------------------------------------------------------------------- #
 # 分发器
 # ---------------------------------------------------------------------- #
@@ -87,7 +83,7 @@ class EventDispatcher:
         auto_start: bool = False,
         verbose: bool = False,
     ) -> None:
-        # 工单明确要求全局线程安全队列 queue.Queue(maxsize=50)
+        # 要求全局线程安全队列 queue.Queue(maxsize=50)
         self.event_queue: queue.Queue[AlertEvent] = queue.Queue(maxsize=maxsize)
         self.maxsize = maxsize
         self.endpoint = endpoint
@@ -226,7 +222,6 @@ class EventDispatcher:
     def _log(self, msg: str) -> None:
         if self.verbose:
             print(f"[EventDispatcher] {msg}")
-
 
 # ---------------------------------------------------------------------- #
 # 守护上报线程

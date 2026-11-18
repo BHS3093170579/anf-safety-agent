@@ -43,7 +43,6 @@ BATCH = 6
 # 检测跳帧：每 N 帧推理一次，其余帧复用上一次的检测框
 DETECT_EVERY = 2
 
-
 def _all_rtsp(cams: dict) -> list[str]:
     """现场所有可用的 RTSP 地址（去重保序）。"""
     out: list[str] = []
@@ -52,7 +51,6 @@ def _all_rtsp(cams: dict) -> list[str]:
         if src.startswith("rtsp://") and src not in out:
             out.append(src)
     return out
-
 
 def _options_for(cam_cfg: dict, fallback: dict, cid: str,
                  extra_rtsp: list[str] | None = None) -> list[str]:
@@ -91,11 +89,9 @@ def _options_for(cam_cfg: dict, fallback: dict, cid: str,
         out.append(str(p.relative_to(ROOT)))
     return out
 
-
 def _resolve(src: str) -> str:
     """RTSP 原样返回，本地文件拼成绝对路径。"""
     return src if src.startswith(("rtsp://", "http://")) else str(ROOT / src)
-
 
 def _read_frame(cap: cv2.VideoCapture, src: str):
     """读一帧；本地视频读到头就回到第一帧，RTSP 断了返回 None。"""
@@ -107,7 +103,6 @@ def _read_frame(cap: cv2.VideoCapture, src: str):
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
     ok, frame = cap.read()
     return frame if ok else None
-
 
 def _stop(reason: str = "") -> None:
     """释放所有流，写报告（只落文件，展示交给下一轮脚本）。"""
@@ -126,7 +121,6 @@ def _stop(reason: str = "") -> None:
             tuple(st_.get("active") or CAMS), reason,
         )
         st_["last_report"] = info
-
 
 def render_multi_camera_panel() -> None:
     cams, _ = _load_yaml()
@@ -327,7 +321,6 @@ def render_multi_camera_panel() -> None:
 
     _run_loop()
 
-
 def _write_multi_report(sources: dict, frames: int, alerts: dict,
                         states: dict, cams: tuple[str, ...] = CAMS,
                         reason: str = "") -> dict:
@@ -357,7 +350,6 @@ def _write_multi_report(sources: dict, frames: int, alerts: dict,
     )
     path.write_text(text, encoding="utf-8")
     return {"text": text, "name": path.name}
-
 
 def _show_report(info: dict) -> None:
     st.success(f"报告已生成：`{info['name']}`（outputs/reports）")

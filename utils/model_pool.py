@@ -1,8 +1,6 @@
 """线程安全的推理模型池。
 
-工单编号：CV项目-安防智能体-03-边缘端—ModelPool+显存控制与人体 BBox 重构追踪
-
-设计目标（对应工单第 2 节「极限显存瘦身」）：
+设计目标（对应设计第 2 节「极限显存瘦身」）：
     显存中只允许常驻**单份** pose 模型，严禁再加载通用目标检测模型。
     人体外接框由 17 个骨骼关键点反向计算（见 tracking/keypoint_bbox.py），
     因此不需要任何额外的 detect 模型。
@@ -34,7 +32,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 POSE_DIR = PROJECT_ROOT / "weights" / "pose"
-# 工单原文写的是 yolov8s-pose，本项目统一沿用现有权重。
+# 早期设计用的是 yolov8s-pose，本项目统一沿用现有权重。
 # 优先用 TensorRT FP16 引擎（快一倍多），引擎不可用时自动回退到 .pt，
 # 两者都是 COCO-17 关键点、ultralytics 同接口，下游代码不用改。
 #
@@ -46,10 +44,8 @@ POSE_ENGINE = POSE_DIR / "yolov8n-pose.engine"
 POSE_PT = POSE_DIR / "yolov8n-pose.pt"
 DEFAULT_POSE_WEIGHT = POSE_ENGINE if POSE_ENGINE.exists() else POSE_PT
 
-
 def is_engine(path: str | Path) -> bool:
     return Path(path).suffix.lower() == ".engine"
-
 
 def validate_trt_engine(path: str | Path) -> tuple[bool, str]:
     """校验文件是不是**真的** TensorRT 引擎。
@@ -97,7 +93,6 @@ def validate_trt_engine(path: str | Path) -> tuple[bool, str]:
     except Exception as exc:
         return False, f"TRT 反序列化异常：{exc}"
 
-
 def resolve_pose_weight(prefer_engine: bool = True) -> Path:
     """挑一个**确认能用**的 pose 权重。
 
@@ -113,7 +108,6 @@ def resolve_pose_weight(prefer_engine: bool = True) -> Path:
     if POSE_PT.exists():
         return POSE_PT
     return POSE_ENGINE
-
 
 class ModelPool:
     """进程内唯一的 Pose 模型持有者。
@@ -203,7 +197,7 @@ class ModelPool:
                 raise FileNotFoundError(
                     f"Pose 权重不存在：{self.weight}\n"
                     f"已尝试：{[str(POSE_ENGINE), str(POSE_PT)]}\n"
-                    f"工单 03 要求只加载 pose 模型，请先把权重放到 weights/pose/ 目录"
+                    f"要求只加载 pose 模型，请先把权重放到 weights/pose/ 目录"
                 )
 
             model = None
@@ -257,9 +251,9 @@ class ModelPool:
             return model.predict(frame, **default)
 
     def track(self, frame: np.ndarray, **kwargs) -> Any:
-        """预留：如果要走 ultralytics 内置 track（本工单不用，因为要自己重构 BBox）。"""
+        """预留：如果要走 ultralytics 内置 track（本版不用，因为要自己重构 BBox）。"""
         raise NotImplementedError(
-            "工单 03 要求用「关键点重构 BBox + 自建 ByteTrack」，"
+            "要求用「关键点重构 BBox + 自建 ByteTrack」，"
             "请走 tracking/bytetrack_wrapper.py，不要用内置 track()"
         )
 
@@ -315,12 +309,10 @@ class ModelPool:
         except Exception:
             pass
 
-
 def ensure_dirs() -> None:
     """建目录（首次运行时用）。"""
     for d in ("utils", "tracking", "edge"):
         (PROJECT_ROOT / d).mkdir(parents=True, exist_ok=True)
-
 
 if __name__ == "__main__":
     import sys

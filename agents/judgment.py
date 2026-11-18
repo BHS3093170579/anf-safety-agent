@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-JudgmentAgent —— 工单编号：CV专高5-10（工单 02 - 任务 5）
+JudgmentAgent ——
 
 职责：
     根据检测结果判断是否触发告警（规则引擎）。
@@ -36,7 +36,6 @@ from typing import Any
 
 # IOU 统一由 agents.geometry 提供，避免三个文件各写一份实现
 from agents.geometry import bbox_iou as _iou
-
 
 class SimpleTracker:
     """极简跟踪器：给画面里的每个人分配稳定 ID，统计停留时长。
@@ -138,7 +137,6 @@ class SimpleTracker:
             for tid, tr in self.tracks.items() if tr["missing"] == 0
         ]
         return sorted(out, key=lambda x: -x["frames"])
-
 
 class Rule:
     """一条判断规则，独立维护自己的计数与跟踪状态。"""
@@ -297,7 +295,6 @@ class Rule:
 
     def summary(self) -> list[dict]:
         return self.tracker.summary() if self.tracker else []
-
 
 class JudgmentAgent:
     """规则判断 Agent：一条或多条规则并行判断。"""

@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 """边缘端主流水线调度器。
 
-工单编号：CV项目-安防智能体-05（工单 05 · Pipeline 协同）
-
 一帧的处理顺序
 --------------
-    ModelService.process   →  YOLO-pose 检测 + ByteTrack 追踪（工单 03）
-    TrackRecovery          →  3 秒内遮挡的 ID 空间恢复（工单 04）
-    RulesEngine.update     →  五大业务规则的时序状态机（工单 04）
+    ModelService.process   →  YOLO-pose 检测 + ByteTrack 追踪（ 03）
+    TrackRecovery          →  3 秒内遮挡的 ID 空间恢复（ 04）
+    RulesEngine.update     →  五大业务规则的时序状态机（ 04）
     状态迁移检测           →  某 Track 由 normal/suspected 首次变为 abnormal
     ReidExtractor.extract  →  **仅此一刻**裁剪人体、跑 OSNet、取 512 维特征
     EventDispatcher.push   →  拼装事件、非阻塞入队，后台线程异步 POST
 
-核心约束（工单验收标准第 1 条）
+核心约束（验收标准第 1 条）
 ------------------------------
 严禁在非 abnormal 状态下运行 Re-ID 特征提取网络。实现上靠三重保证：
   1. 只有 `rs.state == "abnormal"` 才进入提取分支；
@@ -37,7 +35,6 @@ from utils.reid_extractor import ReidExtractor
 # 状态严重度：数值越大越严重
 SEVERITY = {"normal": 0, "suspected": 1, "abnormal": 2}
 
-
 def _iou(a, b) -> float:
     """两个 xyxy 框的 IoU；任一为空返回 0。"""
     try:
@@ -52,7 +49,6 @@ def _iou(a, b) -> float:
         return 0.0
     ua = (ax2 - ax1) * (ay2 - ay1) + (bx2 - bx1) * (by2 - by1) - inter
     return inter / ua if ua > 0 else 0.0
-
 
 # ---------------------------------------------------------------------- #
 @dataclass
@@ -74,7 +70,6 @@ class FrameReport:
     @property
     def abnormal_rules(self) -> list:
         return [r for r in self.rule_results if r.state == "abnormal"]
-
 
 # ---------------------------------------------------------------------- #
 class EdgePipeline:
@@ -214,7 +209,7 @@ class EdgePipeline:
             if k not in latest or SEVERITY.get(rs.state, 0) > SEVERITY.get(latest[k].state, 0):
                 latest[k] = rs
 
-        # 5) 状态跃迁 → 按需提取 Re-ID（这是整个工单的核心）
+        # 5) 状态跃迁 → 按需提取 Re-ID（这是整套设计的核心）
         for tid, rs in latest.items():
             key = (cam_id, tid)
             prev = self._prev_state.get(key, "normal")

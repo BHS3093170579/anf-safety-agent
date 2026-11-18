@@ -20,14 +20,12 @@ if not VIDEO.exists():
     print(f"[SKIP] 缺少演示视频: {VIDEO}（见 datasets/videos/README.md）")
     raise SystemExit(0)
 
-
 def load_cfg() -> tuple[dict, dict]:
     with open(ROOT / "config" / "cameras.yaml", encoding="utf-8") as f:
         cams = yaml.safe_load(f)
     with open(ROOT / "config" / "rules.yaml", encoding="utf-8") as f:
         rules = yaml.safe_load(f)
     return cams, rules
-
 
 def main() -> int:
     cams, rules = load_cfg()
@@ -67,7 +65,6 @@ def main() -> int:
     print("规则最终状态:", seen)
     print("sleep/away 告警帧数:", alerts)
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

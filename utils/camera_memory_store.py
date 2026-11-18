@@ -1,8 +1,6 @@
 """单镜头时序状态缓存（CameraMemoryStore）。
 
-工单编号：CV项目-安防智能体-04-边缘端—时序规则引擎与ID空间恢复任务工单
-
-要解决的问题（工单 2.1 核心痛点）：
+要解决的问题（ 2.1 核心痛点）：
     工地里脚手架、材料堆、车辆随处可见，工友移动时视觉信号中断 1~3 秒很常见。
     ByteTrack 断轨超过 track_buffer 就会丢掉这条轨迹，人再出现时拿一个**全新 ID**。
     一旦 ID 换了，这条命从「已侵入 ROI 12 秒」变成「刚进来 0 秒」，
@@ -29,7 +27,6 @@ import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any
-
 
 @dataclass
 class TrackState:
@@ -58,7 +55,6 @@ class TrackState:
     def is_lost(self) -> bool:
         return self.lost_at is not None
 
-
 class CameraMemoryStore:
     """一路摄像头一张状态表。多个摄像头互不可见。
 
@@ -70,7 +66,7 @@ class CameraMemoryStore:
     """
 
     def __init__(self, lost_ttl: float = 3.0) -> None:
-        # LostTracks 只保留工单要求的 3 秒窗口
+        # LostTracks 只保留要求的 3 秒窗口
         self.lost_ttl = float(lost_ttl)
         self._data: dict[str, dict[int, TrackState]] = {}
         self._lock = threading.RLock()
@@ -126,7 +122,7 @@ class CameraMemoryStore:
     def recover(self, cam_id: str, old_id: int, new_id: int, now: float | None = None) -> TrackState | None:
         """把 old_id 的全部时序状态搬到 new_id 上。
 
-        工单要求「将新目标 ID 强行改写为旧 ID」——实现上有两种做法：
+        要求「将新目标 ID 强行改写为旧 ID」——实现上有两种做法：
             a) 下游直接把 new_id 当作 old_id 用（ID 覆写）
             b) 复制状态过去，ID 保持新值
         这里用 (a)：把状态挂到 old_id 上并删掉 new_id 的空壳，

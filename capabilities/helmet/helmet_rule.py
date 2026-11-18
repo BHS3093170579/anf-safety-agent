@@ -9,7 +9,6 @@
 这样"人出现了但没戴帽子"就不会被漏掉；已戴安全帽的人因为头上压着 helmet 框，
 不会被重复报成违规。
 
-工单：CV-安防智能体V1.0-03 / CV专高5-11
 """
 from __future__ import annotations
 
@@ -32,7 +31,6 @@ HEAD_KPS = (KP_NOSE,) + KP_EYES + KP_EARS
 HELMET_ON = {"helmet", "hardhat", "hard_hat", "safety_helmet", "helmet_on"}
 HELMET_OFF = {"no_helmet", "no_hat"}
 
-
 def _iou(a: Sequence[float], b: Sequence[float]) -> float:
     x1, y1 = max(a[0], b[0]), max(a[1], b[1])
     x2, y2 = min(a[2], b[2]), min(a[3], b[3])
@@ -43,12 +41,10 @@ def _iou(a: Sequence[float], b: Sequence[float]) -> float:
     area_b = max((b[2] - b[0]) * (b[3] - b[1]), 1e-6)
     return inter / (area_a + area_b - inter)
 
-
 def _center_inside(box: Sequence[float], region: Sequence[float]) -> bool:
     cx = (box[0] + box[2]) / 2.0
     cy = (box[1] + box[3]) / 2.0
     return region[0] <= cx <= region[2] and region[1] <= cy <= region[3]
-
 
 def _center_dist_norm(a: Sequence[float], b: Sequence[float]) -> float:
     """中心距离 / 平均框尺寸，用来识别"同一个头但框大小不同"的重复框。"""
@@ -57,7 +53,6 @@ def _center_dist_norm(a: Sequence[float], b: Sequence[float]) -> float:
     size = max((a[2] - a[0] + b[2] - b[0]) / 2.0,
                (a[3] - a[1] + b[3] - b[1]) / 2.0, 1.0)
     return float(np.hypot(acx - bcx, acy - bcy)) / size
-
 
 def head_box_from_keypoints(kpts: np.ndarray, vis_thr: float = 0.30) -> Optional[List[float]]:
     """由头部关键点（鼻/眼/耳）构造人头框；关键点太少时返回 None。"""
@@ -84,7 +79,6 @@ def head_box_from_keypoints(kpts: np.ndarray, vis_thr: float = 0.30) -> Optional
     half_up = span * 1.15
     half_dn = span * 1.25
     return [cx - half_w, cy - half_up, cx + half_w, cy + half_dn]
-
 
 class HelmetFallbackChecker:
     """用姿态模型找人头，补齐"有人但没戴安全帽"的漏检。

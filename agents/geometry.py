@@ -7,7 +7,6 @@
 """
 from __future__ import annotations
 
-
 def bbox_iou(a: list[float], b: list[float]) -> float:
     """两个 [x1,y1,x2,y2] 的 IOU（交集 / 并集）。
 
@@ -28,7 +27,6 @@ def bbox_iou(a: list[float], b: list[float]) -> float:
     area_b = max(0.0, b[2] - b[0]) * max(0.0, b[3] - b[1])
     union = area_a + area_b - inter
     return inter / union if union > 0 else 0.0
-
 
 def bbox_ios(a: list[float], b: list[float]) -> float:
     """IOS（交集 / 较小框面积）。
@@ -51,11 +49,9 @@ def bbox_ios(a: list[float], b: list[float]) -> float:
     smaller = min(area_a, area_b)
     return inter / smaller if smaller > 0 else 0.0
 
-
 def bbox_area(b: list[float]) -> float:
     """框面积。"""
     return max(0.0, b[2] - b[0]) * max(0.0, b[3] - b[1])
-
 
 def bbox_center(b: list[float]) -> tuple[float, float]:
     """框中心点。"""

@@ -20,7 +20,6 @@ if not VIDEO.exists():
     print(f"[SKIP] 缺少演示视频: {VIDEO}（见 datasets/videos/README.md）")
     raise SystemExit(0)
 
-
 def main() -> int:
     with open(ROOT / "config" / "cameras.yaml", encoding="utf-8") as f:
         cams = yaml.safe_load(f)
@@ -60,7 +59,6 @@ def main() -> int:
     cap.release()
     print("away 最终状态:", last)
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

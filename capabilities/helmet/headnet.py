@@ -1,6 +1,5 @@
 """头框分类网络定义与预处理（训练与推理共用，保证 state_dict 能跨进程加载）。
 
-工单：CV-安防智能体V1.0-03 / CV专高5-11
 """
 from __future__ import annotations
 
@@ -15,7 +14,6 @@ CLASS_NAMES = ["helmet", "no_helmet"]
 IMG_SIZE = 128
 MEAN = 0.45
 STD = 0.25
-
 
 class HeadNet(nn.Module):
     """4 层卷积 + 全局池化的小分类网络（约 0.35M 参数）。"""
@@ -43,14 +41,12 @@ class HeadNet(nn.Module):
     def forward(self, x):
         return self.head(self.features(x))
 
-
 def preprocess(img_bgr: np.ndarray, size: int = IMG_SIZE) -> torch.Tensor:
     """BGR 裁剪图 -> 归一化张量 (3,size,size)。"""
     img = cv2.resize(img_bgr, (size, size))
     x = img[:, :, ::-1].astype(np.float32) / 255.0
     x = (x - MEAN) / STD
     return torch.from_numpy(np.ascontiguousarray(x.transpose(2, 0, 1)))
-
 
 def load_classifier(path: str, device: torch.device) -> "HeadNet":
     """加载训练好的分类器。"""

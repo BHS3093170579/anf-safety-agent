@@ -18,11 +18,9 @@ from edge.pipeline import EdgePipeline  # noqa: E402
 
 VIDEOS = ROOT / "datasets" / "videos"
 
-
 def load_yaml(name: str) -> dict:
     with open(ROOT / "config" / name, encoding="utf-8") as f:
         return yaml.safe_load(f)
-
 
 def grab_frames(path: Path, n: int) -> list:
     cap = cv2.VideoCapture(str(path))
@@ -35,7 +33,6 @@ def grab_frames(path: Path, n: int) -> list:
     cap.release()
     return out
 
-
 def bench(fn, frames: list, warmup: int = 5) -> tuple[float, float]:
     for f in frames[:warmup]:
         fn(f)
@@ -45,7 +42,6 @@ def bench(fn, frames: list, warmup: int = 5) -> tuple[float, float]:
         fn(f)
         ts.append((time.perf_counter() - t0) * 1000.0)
     return statistics.median(ts), sum(ts) / len(ts)
-
 
 def main() -> int:
     scenes = load_yaml("scenes.yaml")["scenes"]
@@ -148,7 +144,6 @@ def main() -> int:
     for name, med, avg in rows:
         print(f"{name:46s} {med:9.1f} {avg:9.1f} {1000.0 / avg:9.1f}")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

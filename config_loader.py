@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-配置加载模块 —— 工单编号：CV项目-安防智能体-02-项目初始化、配置体系与多路视频异步流读取
+配置加载模块 ——
 
 职责：
     1. 读取 config/ 下的四份 YAML，并提供校验与查询
-         system.yaml    全局参数（路径、拉流、告警、云端）    ← 工单 02 新增
-         rules.yaml     五大业务场景阈值                      ← 工单 02 新增
-         cameras.yaml   摄像头地址与 ROI                      ← 工单 02 新增
+         system.yaml    全局参数（路径、拉流、告警、云端）    ← 新增
+         rules.yaml     五大业务场景阈值                      ← 新增
+         cameras.yaml   摄像头地址与 ROI                      ← 新增
          scenes.yaml    模型与类别定义（V1.0 沿用，不破坏）
     2. 支持环境变量热替换，写法 ${VAR} 或 ${VAR:默认值}
        这样摄像头地址、机器人 webhook、云端密钥都不用写进仓库。
@@ -47,7 +47,6 @@ _ENV_PATTERN = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::([^}]*))?\}")
 # 记录哪些环境变量没配到，便于启动时提示
 _missing_env: set[str] = set()
 
-
 # ============================================================
 # 环境变量替换
 # ============================================================
@@ -80,7 +79,6 @@ def expand_env(value: Any) -> Any:
 
     return value
 
-
 def missing_env_vars() -> list[str]:
     """返回本次进程中没配到的环境变量名（去重排序）。
 
@@ -88,7 +86,6 @@ def missing_env_vars() -> list[str]:
     所以启动时应该打一行提示，而不是等到报警推不出去才发现。
     """
     return sorted(_missing_env)
-
 
 # ============================================================
 # 通用读取
@@ -105,7 +102,6 @@ def _read_yaml(path: Path) -> dict[str, Any]:
         raise ValueError(f"配置文件顶层必须是字典：{path}")
     return expand_env(data)
 
-
 def _resolve(path_str: str) -> str:
     """把配置里的相对路径按项目根目录解析成绝对路径。
 
@@ -118,9 +114,8 @@ def _resolve(path_str: str) -> str:
         return str(p)
     return str(PROJECT_ROOT / p)
 
-
 # ============================================================
-# 三份新配置（工单 02）
+# 三份新配置（ 02）
 # ============================================================
 def load_system(path: str | Path | None = None) -> dict[str, Any]:
     """加载 system.yaml 并补齐默认值。"""
@@ -158,7 +153,6 @@ def load_system(path: str | Path | None = None) -> dict[str, Any]:
 
     return cfg
 
-
 def load_rules(path: str | Path | None = None) -> dict[str, Any]:
     """加载 rules.yaml 并做基本校验。"""
     cfg = _read_yaml(Path(path) if path else RULES_PATH)
@@ -180,7 +174,6 @@ def load_rules(path: str | Path | None = None) -> dict[str, Any]:
             raise ValueError(f"rules.yaml: {name}.min_consecutive_frames 必须是 ≥1 的整数")
 
     return cfg
-
 
 def load_cameras(path: str | Path | None = None) -> dict[str, Any]:
     """加载 cameras.yaml，校验摄像头与 ROI。"""
@@ -212,7 +205,6 @@ def load_cameras(path: str | Path | None = None) -> dict[str, Any]:
 
     return cfg
 
-
 def load_all() -> dict[str, Any]:
     """一次性加载全部配置，返回一个总字典。
 
@@ -230,7 +222,6 @@ def load_all() -> dict[str, Any]:
         "cameras": load_cameras(),
         "scenes": load_config(),
     }
-
 
 def resolve_stream_source(cameras_cfg: dict, cam_id: str) -> str:
     """取某一路摄像头的流地址，必要时回退到本地视频。
@@ -258,7 +249,6 @@ def resolve_stream_source(cameras_cfg: dict, cam_id: str) -> str:
         f"请设置环境变量或修改 config/cameras.yaml"
     )
 
-
 # ============================================================
 # V1.0 主配置（模型与场景），签名保持不变
 # ============================================================
@@ -273,7 +263,6 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
         _validate_scene(name, scene)
 
     return cfg
-
 
 def _validate_scene(name: str, scene: dict) -> None:
     """校验单个场景配置，缺字段立刻报错，不要等跑到一半才发现。
@@ -331,7 +320,6 @@ def _validate_scene(name: str, scene: dict) -> None:
             f"或修正 config/scenes.yaml 的 model 字段"
         )
 
-
 def get_scene(cfg: dict, scene_name: str) -> dict:
     """取出指定场景配置，并把 model 转成绝对路径。"""
     if scene_name not in cfg["scenes"]:
@@ -348,11 +336,9 @@ def get_scene(cfg: dict, scene_name: str) -> dict:
     scene["rules"].setdefault("min_consecutive_frames", 1)
     return scene
 
-
 def list_scenes(cfg: dict) -> list[str]:
     """列出所有可用场景名。"""
     return list(cfg["scenes"].keys())
-
 
 def get_output_dirs(cfg: dict) -> dict[str, Path]:
     """返回输出目录（已创建）。

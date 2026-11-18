@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-LangGraph 状态图定义 —— 工单编号：CV专高5-10（工单 02 - 任务 1/2/7）
+LangGraph 状态图定义 ——
 
-本文件对应工单要求：
+本文件对应要求：
     任务 1：LangGraph 跑通 StateGraph（Node / Edge / ConditionalEdge）
     任务 2：状态 Schema（TypedDict），alerts 用 Annotated[list, operator.add] 累积
     任务 7：用 add_conditional_edges 实现动态路由
@@ -14,7 +14,7 @@ LangGraph 状态图定义 —— 工单编号：CV专高5-10（工单 02 - 任�
                 └─ no_alert  ─────────────────────────→ END
 
 设计说明（为什么 Graph 只处理「单帧」）：
-    工单的任务 3 描述 VideoCaptureAgent「输出帧图像 + 时间戳」，
+    设计描述 VideoCaptureAgent「输出帧图像 + 时间戳」，
     说明这一版是单帧处理、外层循环驱动视频。这样 Graph 结构清晰、
     易测试，也便于后续扩展成多路摄像头并行。
     跨帧的告警累积由 main.py 负责汇总，报告由 ReportAgent 统一生成。
@@ -28,19 +28,18 @@ from typing import Annotated, Any, TypedDict
 import numpy as np
 from langgraph.graph import END, START, StateGraph
 
-
 # ============================================================
-# 状态 Schema（工单 02 任务 2）
+# 状态 Schema（ 02 任务 2）
 # ============================================================
 class SecurityVideoState(TypedDict, total=False):
     """安防视频处理状态。
 
-    工单要求的基础字段全部保留，并补充了场景与时间戳等实用字段。
+    要求的基础字段全部保留，并补充了场景与时间戳等实用字段。
     alerts 用 Annotated[list, operator.add]：多个节点先后写入时会「追加」而不是覆盖，
     这是多 Agent 场景最容易被忽略的坑。
     """
 
-    # ---- 工单要求字段 ----
+    # ---- 要求字段 ----
     video_path: str
     frame: np.ndarray | None
     detections: list[dict]
@@ -53,7 +52,6 @@ class SecurityVideoState(TypedDict, total=False):
     timestamp: float
     has_alert: bool
     alert_records: Annotated[list[dict], operator.add]
-
 
 # ============================================================
 # 节点工厂：把 Agent 实例注入成 LangGraph 节点
@@ -79,7 +77,6 @@ def make_capture_node(video_agent, frames_iter_ref: dict):
 
     return capture_node
 
-
 def make_detection_node(detector):
     """DetectionAgent 节点：帧 → 检测结果。"""
 
@@ -91,7 +88,6 @@ def make_detection_node(detector):
         return {"detections": detections}
 
     return detection_node
-
 
 def make_judgment_node(judgment):
     """JudgmentAgent 节点：检测结果 → 是否告警。"""
@@ -106,7 +102,6 @@ def make_judgment_node(judgment):
         }
 
     return judgment_node
-
 
 def make_alert_node(alert_agent, video_name: str):
     """AlertAgent 节点：推送告警 + 存证据截图。"""
@@ -123,7 +118,6 @@ def make_alert_node(alert_agent, video_name: str):
 
     return alert_node
 
-
 def make_report_node(reporter, state_ref: dict):
     """ReportAgent 节点：把本次处理的告警汇总成报告。"""
 
@@ -134,9 +128,8 @@ def make_report_node(reporter, state_ref: dict):
 
     return report_node
 
-
 # ============================================================
-# 条件路由（工单 02 任务 7）
+# 条件路由（ 02 任务 7）
 # ============================================================
 def route_after_judgment(state: SecurityVideoState) -> str:
     """有告警走 alert → report，无告警直接 END。
@@ -149,13 +142,11 @@ def route_after_judgment(state: SecurityVideoState) -> str:
         return "has_alert"
     return "no_alert"
 
-
 def route_after_capture(state: SecurityVideoState) -> str:
     """视频读完则直接结束，避免空帧进入检测。"""
     if state.get("frame") is None:
         return "done"
     return "continue"
-
 
 # ============================================================
 # 构图
@@ -202,7 +193,6 @@ def build_graph(scene_cfg: dict, detector, judgment, alert_agent,
 
     graph = builder.compile()
     return graph, frames_iter_ref
-
 
 def new_iter_ref(video_agent) -> dict:
     """创建一个持有新迭代器的引用对象。"""

@@ -36,7 +36,6 @@ PIPELINE_LABELS = {
 
 WEIGHT_DIR = Path(__file__).resolve().parents[2] / "weights" / "helmet_qc"
 
-
 class HelmetCascadeDetector(DetectionAgent):
     """安全帽三路检测器。
 

@@ -1,8 +1,6 @@
 """空间距离 ID 恢复器（TrackRecovery）。
 
-工单编号：CV项目-安防智能体-04-边缘端—时序规则引擎与ID空间恢复任务工单
-
-工单原文的判据：
+原始判据：
     · 维护 LostTracks：3 秒内消失目标的 [track_id, last_bbox, last_timestamp, state]
     · 当画面出现「生命周期为 1 帧」的全新追踪目标时，
       算它与所有丢失目标中心点的欧氏距离
@@ -15,7 +13,7 @@
     两者同时卡：3 秒 × 正常步速 1.2m/s ≈ 3.6m，50px 对应画面里的一小段，
               这个组合正好覆盖「被柱子挡了一下」的典型场景。
 
-额外加的两道防护（工单没写但必须有，否则会乱认）：
+额外加的两道防护（没写但必须有，否则会乱认）：
     1. 尺寸相似度：框面积比要在 0.4~2.5 之间。
        否则「远处的路人小框」会被合并到「近处工友的大框」上。
     2. 一对多取最近：多个丢失目标都符合时，只取距离最小的那个，
@@ -29,12 +27,10 @@ import time
 
 from utils.camera_memory_store import CameraMemoryStore, TrackState
 
-
 def center(bbox: list[float] | tuple[float, ...]) -> tuple[float, float]:
     """框中心点。"""
     x1, y1, x2, y2 = float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3])
     return (x1 + x2) / 2.0, (y1 + y2) / 2.0
-
 
 def iou(a: list[float], b: list[float]) -> float:
     ax1, ay1, ax2, ay2 = a
@@ -49,10 +45,8 @@ def iou(a: list[float], b: list[float]) -> float:
     area_b = max(1.0, (bx2 - bx1) * (by2 - by1))
     return inter / (area_a + area_b - inter)
 
-
 def area(bbox: list[float]) -> float:
     return max(1.0, (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]))
-
 
 class TrackRecovery:
     """把「刚出现 1 帧的新目标」匹配回「3 秒内消失的旧目标」。"""
@@ -71,7 +65,7 @@ class TrackRecovery:
         self.area_ratio_range = area_ratio_range
         self.new_track_max_age_frames = int(new_track_max_age_frames)
 
-        # track_id → 已经连续出现多少帧。lifecycle=1 就是工单说的「全新目标」
+        # track_id → 已经连续出现多少帧。lifecycle=1 就是所谓「全新目标」
         self._lifecycle: dict[tuple[str, int], int] = {}
         self.stats = {
             "checked": 0,

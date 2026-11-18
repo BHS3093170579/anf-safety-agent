@@ -2,7 +2,7 @@
 """
 视频播放器模块 —— 让检测结果像播放器一样流畅播放、暂停、拖动
 
-对应工单：CV专高5-11（工单 03 - 任务 7：Streamlit 界面）
+Streamlit 界面
 
 为什么需要这个模块：
     Streamlit 的 st.image() 每次调用都要走一遍 WebSocket + 浏览器重绘，
@@ -27,7 +27,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-
 def _get_ffmpeg() -> str | None:
     """拿到可用的 ffmpeg 可执行文件路径，优先用 imageio-ffmpeg 自带的。"""
     try:
@@ -40,11 +39,9 @@ def _get_ffmpeg() -> str | None:
     import shutil
     return shutil.which("ffmpeg")
 
-
 def h264_available() -> bool:
     """浏览器可播放的编码是否可用。"""
     return _get_ffmpeg() is not None
-
 
 class VideoWriter:
     """把帧序列写成浏览器可播放的 H.264 MP4。
@@ -134,7 +131,6 @@ class VideoWriter:
             self._fallback = None
         return self.out_path
 
-
 def is_playable(path: str | Path) -> bool:
     """粗查文件是否是有效视频（能被 OpenCV 打开且有帧）。"""
     p = Path(path)
@@ -145,7 +141,6 @@ def is_playable(path: str | Path) -> bool:
     n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if ok else 0
     cap.release()
     return ok and n > 0
-
 
 def burn_frame_into_video(src_video: Path, detections_by_frame: dict[int, list[dict]],
                           draw_fn, out_path: Path, max_frames: int = 0) -> Path:

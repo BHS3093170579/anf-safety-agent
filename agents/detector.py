@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-DetectionAgent —— 工单编号：CV专高5-10（工单 02 - 任务 4）
+DetectionAgent ——
 
 职责：
     对单帧图像做目标检测，输出统一格式的结果列表。
@@ -11,7 +11,7 @@ DetectionAgent —— 工单编号：CV专高5-10（工单 02 - 任务 4）
        统一取其 boxes 输出，segment 的 masks 作为可选字段
     3. 类别名从模型自身读取，再与场景配置校验，避免「类别对不上」导致漏报
 
-输出格式（工单 01 任务 3 规定的接口）：
+输出格式（接口约定）：
     [
         {"class": "no-hardhat", "class_id": 1, "bbox": [x1, y1, x2, y2], "score": 0.87},
         ...
@@ -28,7 +28,6 @@ import numpy as np
 
 from agents.geometry import bbox_area, bbox_ios, bbox_iou
 from agents.stabilizer import DetectionStabilizer
-
 
 class DetectionAgent:
     """检测 Agent：一帧图像 → 检测结果列表。"""

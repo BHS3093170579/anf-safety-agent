@@ -14,7 +14,6 @@ from pathlib import Path
 
 from ultralytics import YOLO
 
-
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weights", required=True, help="best.pt 路径")
@@ -38,7 +37,6 @@ def main() -> None:
         batch=1,
     )
     print("导出完成:", out)
-
 
 if __name__ == "__main__":
     main()

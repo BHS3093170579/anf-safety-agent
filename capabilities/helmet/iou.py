@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import List
 
-
 def _iou(a: List[float], b: List[float]) -> float:
     ax1, ay1, ax2, ay2 = a
     bx1, by1, bx2, by2 = b
@@ -20,6 +19,5 @@ def _iou(a: List[float], b: List[float]) -> float:
         return 0.0
     ua = (ax2 - ax1) * (ay2 - ay1) + (bx2 - bx1) * (by2 - by1) - inter
     return inter / ua if ua > 0 else 0.0
-
 
 iou = _iou

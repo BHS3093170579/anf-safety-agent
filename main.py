@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-安防智能体 V1.0 · 主程序 —— 工单编号：CV专高5-10（工单 02）
+安防智能体 V1.0 · 主程序 ——
 
 用法：
     # 用默认场景（helmet）跑测试视频
@@ -43,10 +43,9 @@ from agents.judgment import JudgmentAgent  # noqa: E402
 from agents.reporter import ReportAgent  # noqa: E402
 from agents.video_capture import VideoCaptureAgent  # noqa: E402
 
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="安防智能体 V1.0（工单 02 · CV专高5-10）",
+        description="安防智能体 V1.0",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     p.add_argument("--scene", default="helmet", help="场景名（见 config/scenes.yaml）")
@@ -66,13 +65,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no-snapshot", action="store_true", help="不保存告警截图")
     return p.parse_args()
 
-
 def banner() -> None:
     print("=" * 68)
     print("  安防智能体 V1.0 · 多智能体视频分析")
-    print("  工单 02 | CV专高5-10 | LangGraph + Ultralytics + TensorRT")
+    print("  LangGraph + Ultralytics + TensorRT")
     print("=" * 68)
-
 
 def main() -> int:
     args = parse_args()
@@ -212,7 +209,6 @@ def main() -> int:
     print("=" * 68)
 
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

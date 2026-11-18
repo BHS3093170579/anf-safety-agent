@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 安防智能体 V1.0 · Streamlit Web 界面
-工单编号：CV专高5-11（工单 03 - 任务 7）
 
-功能对应工单要求：
+功能对应要求：
     实时监控画面（VideoCapture）—— 「实时监控」标签页，逐帧显示检测框与姿态骨架
     告警列表（AlertList）       —— 「告警列表」标签页，带等级徽章与证据截图
     报告查看（ReportViewer）    —— 「报告查看」标签页，可在线阅读与下载
@@ -241,14 +240,12 @@ SKELETON = [
     (11, 13), (13, 15), (12, 14), (14, 16), (0, 1), (0, 2), (1, 3), (2, 4), (3, 5), (4, 6),
 ]
 
-
 # ============================================================
 # 资源缓存
 # ============================================================
 @st.cache_resource(show_spinner=False)
 def load_scene_configs() -> dict:
     return load_config()
-
 
 @st.cache_resource(show_spinner="正在加载检测模型…")
 def get_detector(scene_name: str, conf: float, weight_path: str, device_key: str,
@@ -276,10 +273,8 @@ def get_detector(scene_name: str, conf: float, weight_path: str, device_key: str
 
     return DetectionAgent(scene)
 
-
 # 检测器的最低阈值：低到能让 no-hardhat 的弱信号也进入稳定器
 DETECT_FLOOR = 0.08
-
 
 def filter_by_class_conf(dets: list[dict], user_conf: float,
                          violation_ids: set[int]) -> list[dict]:
@@ -300,9 +295,7 @@ def filter_by_class_conf(dets: list[dict], user_conf: float,
             out.append(d)
     return out
 
-
 WEIGHT_EXTS = (".engine", ".onnx", ".pt")
-
 
 def list_weights(scene_name: str) -> list[Path]:
     """列出该场景模型目录下所有可用权重（engine / onnx / pt）。
@@ -332,13 +325,11 @@ def list_weights(scene_name: str) -> list[Path]:
     order = {".engine": 0, ".onnx": 1, ".pt": 2}
     return sorted(found, key=lambda p: (order.get(p.suffix.lower(), 9), p.name))
 
-
 def weight_label(p: Path) -> str:
     """权重下拉框的显示文本：文件名 + 大小 + 速度提示。"""
     mb = p.stat().st_size / 1024 / 1024
     hint = {"engine": "最快 · 需 TensorRT", "onnx": "跨平台", "pt": "通用 · 较慢"}
     return f"{p.name}   {mb:.1f} MB   {hint.get(p.suffix.lstrip('.').lower(), '')}"
-
 
 def get_scene_cfg(scene_name: str, conf: float) -> dict:
     cfg = load_scene_configs()
@@ -346,12 +337,10 @@ def get_scene_cfg(scene_name: str, conf: float) -> dict:
     scene["conf"] = conf
     return scene
 
-
 @st.cache_resource(show_spinner=False)
 def get_output_paths() -> dict:
     cfg = load_scene_configs()
     return {k: str(v) for k, v in get_output_dirs(cfg).items()}
-
 
 def get_alert_webhook() -> str:
     """读 system.yaml 的 alert.webhook_url（钉钉/企业微信机器人地址）。"""
@@ -362,7 +351,6 @@ def get_alert_webhook() -> str:
         return str(alert.get("webhook_url") or "").strip()
     except Exception:
         return ""
-
 
 # ============================================================
 # 绘制
@@ -403,7 +391,6 @@ def draw_skeleton(vis: np.ndarray, keypoints: list[list[float]],
         cv2.rectangle(vis, (x0, ty - th - 4), (x0 + tw + 6, ty + 2), (20, 20, 20), -1)
         cv2.putText(vis, text, (x0 + 3, ty - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.55,
                     (0, 128, 255) if head_drop <= -0.32 else (0, 255, 255), 2)
-
 
 def draw_detections(frame: np.ndarray, detections: list[dict],
                     violation_ids: set[int]) -> np.ndarray:
@@ -500,7 +487,6 @@ def draw_detections(frame: np.ndarray, detections: list[dict],
         cv2.putText(vis, label, (lx + 2, ly1 - 3), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
     return vis
 
-
 def _display_name(video_path) -> str:
     """视频源的人类可读名字。
 
@@ -517,7 +503,6 @@ def _display_name(video_path) -> str:
         return "rtsp_" + host.replace(":", "_")
     return Path(s).name
 
-
 def _display_stem(video_path) -> str:
     """同 ``_display_name``，但本地文件去掉扩展名。"""
     if isinstance(video_path, int) or str(video_path).lower().startswith(
@@ -525,7 +510,6 @@ def _display_stem(video_path) -> str:
     ):
         return _display_name(video_path)
     return Path(str(video_path)).stem
-
 
 def _suppress_nested(detections: list[dict]) -> list[dict]:
     """丢掉两类「看着乱」的框：
@@ -574,7 +558,6 @@ def _suppress_nested(detections: list[dict]) -> list[dict]:
             keep.append(d)
     return keep
 
-
 def _draw_dashed_rect(img: np.ndarray, rect: tuple[int, int, int, int],
                       color, thickness: int = 1, dash: int = 8, gap: int = 6):
     """画虚线框（用于「跟踪补框」和「真实检出」的视觉区分）。"""
@@ -594,11 +577,9 @@ def _draw_dashed_rect(img: np.ndarray, rect: tuple[int, int, int, int],
             cv2.line(img, (x, y), (x, min(y + dash, y2)), color, thickness)
             y += dash + gap
 
-
 def list_videos() -> list[Path]:
     vroot = PROJECT_ROOT / "datasets" / "videos"
     return sorted(p for p in vroot.rglob("*.mp4")) if vroot.exists() else []
-
 
 def save_uploaded_video(uploaded) -> Path:
     tmp_dir = PROJECT_ROOT / "outputs" / "_uploads"
@@ -606,7 +587,6 @@ def save_uploaded_video(uploaded) -> Path:
     path = tmp_dir / Path(uploaded.name).name
     path.write_bytes(uploaded.getbuffer())
     return path
-
 
 # ============================================================
 # 核心处理
@@ -852,7 +832,6 @@ def run_detection(video_path: Path | int, scene_name: str, conf: float,
         "last_frame": final_img,
     }
 
-
 def render_result_panel(result: dict) -> None:
     """把一次检测的结果渲染出来：指标 + 视频回放 + 下载。
 
@@ -902,12 +881,10 @@ def render_result_panel(result: dict) -> None:
 
     st.success(f"✅ 处理完成，耗时 {result.get('elapsed', 0):.1f} 秒")
 
-
 # ============================================================
 # 摄像头持续运行模式
 # ============================================================
 CAM_BATCH = 8          # 每批处理的帧数，批间交出控制权以便响应暂停
-
 
 def _get_camera(idx):
     """获取或创建摄像头对象，跨批次复用，避免反复开关设备。
@@ -937,7 +914,6 @@ def _get_camera(idx):
     st.session_state["cam_cap"] = cap
     return cap
 
-
 def release_camera() -> None:
     """释放摄像头。"""
     cap = st.session_state.get("cam_cap")
@@ -947,7 +923,6 @@ def release_camera() -> None:
         except Exception:
             pass
     st.session_state["cam_cap"] = None
-
 
 def run_camera_frame(scene_name: str, conf: float, cam_idx: int,
                      location: str, weight_path: str = "",
@@ -1017,11 +992,10 @@ def run_camera_frame(scene_name: str, conf: float, cam_idx: int,
         st.session_state["cam_last_ctx"] = ctx
     return ctx
 
-
 def render_camera_panel(scene_name: str, conf: float, cam_idx: int, location: str,
                         fps: float = 5.0, weight_path: str = "") -> bool:
     """摄像头实时面板：开始/暂停控制 + 实时画面 + 实时时间。
-    
+
     Returns:
         True 表示需要继续下一帧（由调用方统一 st.rerun，避免打断标签页渲染）
     """
@@ -1182,7 +1156,6 @@ def render_camera_panel(scene_name: str, conf: float, cam_idx: int, location: st
     # 由外层统一 rerun，使告警列表与报告也每帧刷新
     return True
 
-
 # ============================================================
 # 共用渲染组件
 # ============================================================
@@ -1239,7 +1212,6 @@ def render_alert_dashboard(records: list[dict]) -> None:
             st.caption("点位分布")
             st.bar_chart(df["location"].value_counts(), height=150)
 
-
 def render_alert_table(records: list[dict]) -> None:
     """渲染告警列表：等级汇总 + 统计图表 + 表格 + 证据截图。"""
     from collections import Counter
@@ -1277,7 +1249,6 @@ def render_alert_table(records: list[dict]) -> None:
                         st.image(snaps[i + j], caption=Path(snaps[i + j]).name,
                                  width="stretch")
 
-
 def generate_camera_report(cam_idx: int, scene_name: str, conf: float,
                            location: str, records: list[dict]) -> None:
     """为摄像头会话生成报告并存入 session_state。"""
@@ -1313,7 +1284,6 @@ def generate_camera_report(cam_idx: int, scene_name: str, conf: float,
     paths = reporter.save(report, stem=f"{tag}_{scene_name}")
     st.session_state["cam_report_paths"] = paths
 
-
 def auto_camera_report(scene_name: str, conf: float, cam_idx,
                        location: str) -> None:
     """暂停/停止摄像头时自动出报告。
@@ -1332,7 +1302,6 @@ def auto_camera_report(scene_name: str, conf: float, cam_idx,
         st.session_state["cam_report_n"] = len(records)
     except Exception as e:  # 报告失败不能打断监控
         _LOG.warning("自动生成报告失败: %s", e)
-
 
 # ============================================================
 # 界面
@@ -1367,11 +1336,9 @@ def render_hero(scene: dict | None, running: bool = False) -> None:
         unsafe_allow_html=True,
     )
 
-
 def badge_html(level: str) -> str:
     cls, icon, label = LEVEL_STYLE.get(level, ("badge-medium", "🟡", level))
     return f'<span class="badge {cls}">{icon} {label}</span>'
-
 
 def main() -> None:
     cfg = load_scene_configs()
@@ -1528,7 +1495,7 @@ def main() -> None:
             st.caption(f"已选：`{label}`")
 
         # ---------- 值班看板入口 ----------
-        # 看板是独立的 Streamlit 应用（工单 09 的产出物 cloud/dashboard.py），
+        # 看板是独立的 Streamlit 应用（ 09 的产出物 cloud/dashboard.py），
         # 单独进程 + 独立端口，避免这里的推理被打断。
         st.divider()
         dashboard_url = os.getenv("DASHBOARD_URL", "http://localhost:8502")
@@ -1746,7 +1713,6 @@ def main() -> None:
                                        mime="application/json", width="stretch")
             st.divider()
             st.markdown(md_text)
-
 
 if __name__ == "__main__":
     main()

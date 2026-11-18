@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-AlertAgent —— 工单编号：CV专高5-10（工单 02 - 任务 6）
+AlertAgent ——
 
 职责：
     把告警推送出去，并保存证据截图。
-    告警内容必须包含工单要求的三项：时间、地点、事件类型。
+    告警内容必须包含要求的三项：时间、地点、事件类型。
 
 推送通道：
     console —— 控制台彩色输出（默认，零依赖）
@@ -21,7 +21,6 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-
 
 LEVEL_COLOR = {
     "critical": (0, 0, 255),
@@ -40,13 +39,11 @@ CLASS_COLOR = {
 }
 DEFAULT_COLOR = (0, 165, 255)
 
-
 def color_for(class_name: str, level: str = "high"):
     """优先按类别取色，未登记的类别退回按等级取色。"""
     if class_name in CLASS_COLOR:
         return CLASS_COLOR[class_name]
     return LEVEL_COLOR.get(level, DEFAULT_COLOR)
-
 
 class AlertAgent:
     """告警 Agent：告警内容 → 控制台/文件 + 证据截图。"""

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """OSNet 行人重识别（Re-ID）特征提取封装。
 
-工单编号：CV项目-安防智能体-05（工单 05 · 按需低耗特征提取）
-
 设计要点
 --------
 1. **懒加载**：进程启动时只有本类的一个空壳，OSNet 的权重不会被读进显存。
@@ -41,7 +39,6 @@ IN_W, IN_H = 128, 256
 # ImageNet 归一化参数（torchreid 的默认预处理）
 MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-
 
 class ReidExtractor:
     """OSNet 特征提取器（懒加载，512 维输出）。"""

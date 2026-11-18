@@ -7,7 +7,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-
 def main() -> int:
     from streamlit.testing.v1 import AppTest
 
@@ -33,7 +32,6 @@ def main() -> int:
     print("running:", st_.get("running"), "已跑帧:", st_.get("i"))
     print("告警:", st_.get("alerts"))
     return 1 if errs else 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

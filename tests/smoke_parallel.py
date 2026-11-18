@@ -15,7 +15,6 @@ from edge.pipeline import EdgePipeline  # noqa: E402
 
 FRAMES = int(sys.argv[1]) if len(sys.argv) > 1 else 30
 
-
 def main() -> int:
     with open(ROOT / "config" / "cameras.yaml", encoding="utf-8") as f:
         cams = yaml.safe_load(f)
@@ -96,7 +95,6 @@ def main() -> int:
     print("各相机上报告警数：", alerts)
     print("异常次数：", errors)
     return 1 if errors else 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

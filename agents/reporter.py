@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-ReportAgent —— 工单编号：CV专高5-10（工单 02）
+ReportAgent ——
 
 职责：
     汇总一次视频处理的所有告警，生成结构化报告（JSON + Markdown）。
 
-报告内容对应工单要求：
+报告内容对应要求：
     - 事件总数、按类型/等级分组
     - 每条告警的时间点（视频内时间 + 墙钟时间）
     - 证据截图路径
@@ -18,7 +18,6 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
 
 class ReportAgent:
     """报告 Agent：告警列表 + 运行统计 → 报告文件。"""
