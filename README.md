@@ -97,14 +97,16 @@ flowchart LR
 - 可选：NVIDIA GPU + TensorRT 10.x（用 `.engine` 加速）；没有 GPU 时用 `.pt` 走 PyTorch 推理
 
 ```bash
-git clone https://github.com/<your-name>/anf-safety-agent.git
+git clone https://github.com/BHS3093170579/anf-safety-agent.git
 cd anf-safety-agent
 pip install -r requirements.txt
 ```
 
-### 2. 放模型权重
+### 2. 准备模型权重
 
-权重体积较大，不进仓库，从 [Releases](../../releases) 下载后按下面结构放置：
+权重（约 200 MB）不随仓库发布，需要自己准备；程序启动时若缺权重，会提示具体缺哪个文件。
+
+按下面结构放置：
 
 ```
 weights/
@@ -124,10 +126,18 @@ weights/
     └── yolov8n-pose.pt
 ```
 
-> TensorRT engine 绑定具体 GPU 与 TRT 版本，换机器请用 `best.pt` 重新导出：
-> ```bash
-> python scripts/export_engines.py --weights weights/helmet/best.pt --imgsz 960
-> ```
+三个来源，任选一种：
+
+1. **自己训练**：安全帽用 YOLO11s 在 960 输入下训练（两类别 `hardhat` / `no-hardhat`），火灾烟雾用 YOLO 实例分割（960，`fire` / `smoke` 两类）。训练脚本与数据集不在本仓库。
+2. **已有权重**：把 `.pt` 按上面目录放好就能跑，没有 `.engine` 时自动回退到 PyTorch 推理。
+3. **导出 engine**：有 NVIDIA GPU 时用 `best.pt` 导出 TensorRT FP16，本机实测推理快约 2 倍：
+
+   ```bash
+   python scripts/export_engines.py --weights weights/helmet/best.pt --imgsz 960
+   python scripts/export_engines.py --weights weights/fire/best.pt --imgsz 960
+   ```
+
+> TensorRT engine 绑定具体 GPU 与 TRT 版本，换机器必须用 `best.pt` 重新导出。
 
 ### 3. 准备测试视频
 
@@ -206,7 +216,7 @@ export DINGDING_WEBHOOK="https://oapi.dingtalk.com/robot/send?access_token=xxx"
 
 三模型同驻显存约 156 MB。
 
-> 想把这个仓库发布到 GitHub？权重走 Releases、仓库设置与自检清单见 [docs/PUBLISH.md](docs/PUBLISH.md)。
+> 想把这个仓库发布到 GitHub？推送步骤、仓库设置与自检清单见 [docs/PUBLISH.md](docs/PUBLISH.md)。
 
 ---
 

@@ -18,11 +18,11 @@ git push -u origin main
 
 推送后确认：仓库首页能看到 README 的双栏截图（`docs/images/helmet.png`、`fire.png`）和 mermaid 架构图。mermaid 需要 GitHub 原生渲染，在网页上会自动画出来。
 
-## 3. 发布权重（Releases）
+## 3. 权重（可选）
 
-权重和演示视频不进 Git 仓库（`.gitignore` 已排除），走 Release 附件。GitHub 单个附件上限 2 GB，当前四个权重包合计约 200 MB，可以直接上传。
+本项目默认**不发布权重**：README 只说明「自己训练或自备 `.pt`」，仓库里也不放 `.engine`，所以 Clone 下来不会自动带模型。这样做的原因是权重约 200 MB，而且 TensorRT engine 绑定具体 GPU，换机器必须重新导出。
 
-需要打包的文件：
+如果以后想随仓库提供权重，可以走 Release 附件（单个附件上限 2 GB）：
 
 ```
 weights/
@@ -32,20 +32,11 @@ weights/
 └── helmet_qc/  best.pt  head_det.pt  head_cls.pt  yolov8n-pose.pt
 ```
 
-本地打 zip：
-
 ```powershell
 Compress-Archive -Path weights\* -DestinationPath weights-v1.0.zip
 ```
 
-然后：
-
-1. 仓库右侧 **Releases → Create a new release**
-2. Tag 填 `v1.0.0`，标题填 `v1.0.0 — 五合一工地安全检测`
-3. 把 `weights-v1.0.zip` 拖进附件区
-4. 发布
-
-README 里的 `[Releases](../../releases)` 链接会直接指向这个页面。
+然后仓库右侧 **Releases → Create a new release**，Tag 填 `v1.0.0`，把 zip 拖进附件区发布。同时记得把 README「准备模型权重」一节改回「从 Releases 下载」。
 
 ## 4. 仓库设置建议
 
