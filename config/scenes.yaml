@@ -1,0 +1,133 @@
+# 安防智能体 V1.0 · 场景配置
+# 工单编号：CV专高5-10（工单 02 - 搭建安防多智能体架构）
+#
+# 设计要点：
+#   1. 每个场景独立配置模型、类别、告警规则，互不干扰
+#   2. 两个模型的 task 不同（detect / segment），必须按各自配置调用
+#   3. 类别映射写死在这里，避免「模型类别名和代码里的名字对不上」导致漏报
+
+scenes:
+
+  # ============================================================
+  # 场景一：施工区安全帽佩戴检测
+  # 工单 03 §1.1：施工现场人员密集，需要实时监控工人是否佩戴安全帽
+  # ============================================================
+  helmet:
+    display_name: "未戴安全帽检测"
+    # TensorRT 引擎（FP16）：6.09ms / 164 FPS，与 .pt 精度 100% 一致
+    # 换 .pt 也行（weights/helmet/best.pt，14.21ms / 70 FPS）
+    # 注意：.engine 绑定了 TensorRT 版本和 GPU，必须在 smoke_trt 环境运行
+    model: "weights/helmet/best.engine"
+    task: "detect"            # 检测模型
+    imgsz: 960                # 与该模型训练尺寸一致，改了会掉点
+    conf: 0.40                # F1 最优点，Precision 0.907 / Recall 0.856
+    iou: 0.45                 # NMS 阈值
+    classes:
+      0: "hardhat"            # 佩戴安全帽
+      1: "no-hardhat"         # 未佩戴安全帽
+    # 检出这些类别即判定为违规
+    violation_classes: [1]
+    # ------------------------------------------------------------
+    # 后处理策略（可选块，不写就用全局默认）
+    # 之前这段逻辑硬编码在 detector.py 里：use_stabilizer = (task=="detect"
+    # and name=="helmet")。加新场景时必须改代码，现在改成配置驱动，
+    # 新场景想复用稳定器只要在这里打开开关。
+    # ------------------------------------------------------------
+    postprocess:
+      enable_stabilizer: true     # 启用时间稳定（漏检帧用轨迹补框）
+      hardhat_floor: 0.60         # 正常类别硬下限：砍掉「头发当帽子」的误检
+      violation_floor: 0.08       # 违规类别下限：让弱信号也能进稳定器
+      min_show: 0.15              # 最终显示门槛
+      max_box_ratio: 0.30         # 框面积上限（占画面比例），超过视为异常
+      min_box_px: 12              # 框边长下限（像素），小于视为噪点
+      stabilize:
+        iou_thres: 0.30           # 轨迹匹配的 IOU 阈值
+        dist_ratio: 0.8           # 质心距离阈值（相对框宽）
+        max_lost: 2               # 最多补几帧（补得越久位置越偏）
+        min_hits: 2               # 连续命中几次才输出
+        track_min_score: 0.15     # 补框的最低置信度
+    rules:
+      min_consecutive_frames: 2   # 连续 2 帧都检出才告警，压掉单帧抖动
+    alert:
+      event_type: "no_helmet"
+      level: "high"
+      title: "未佩戴安全帽"
+      message: "检测到未佩戴安全帽人员"
+
+  # ============================================================
+  # 场景二：火灾烟雾检测
+  # 注意：该模型是 segment（分割），boxes 可用，masks 可选
+  # ============================================================
+  fire:
+    display_name: "火灾烟雾检测"
+    # TensorRT 引擎（FP16, TRT 10.16）：8.0ms / 125 FPS
+    # 若换机器或换 TRT 版本，改用 weights/fire/best.pt（会慢到 14ms）
+    model: "weights/fire/best.engine"
+    task: "segment"           # 分割模型，取其 boxes 做检测用
+    imgsz: 960
+    # 火灾模型检出能力偏弱：conf=0.40 时 38 帧只有 10 帧有检出，
+    # 降到 0.20 提升到 14 帧。再降到 0.15 能多捞到浅灰色、边缘虚化的烟雾
+    conf: 0.15
+    # NMS 的 iou 提高 → 同一个燃烧面被拆成多个小框的情况减少
+    iou: 0.60
+    classes:
+      0: "fire"
+      1: "smoke"
+    violation_classes: [0, 1]
+    rules:
+      min_consecutive_frames: 1   # 火灾单帧即告警，不容延迟
+    alert:
+      event_type: "fire_smoke"
+      level: "critical"
+      title: "火灾/烟雾"
+      message: "检测到火焰或烟雾"
+
+  # ============================================================
+  # 场景三：值班室综合值守（睡岗 + 离岗）
+  # 一个 pose 模型同时供两条规则用，不额外加载检测模型。
+  # 真正的时序判定在「规则引擎」页签：EdgePipeline → RulesEngine，
+  # 参数取自 config/rules.yaml 的 sleep / away 两段。
+  # ============================================================
+  duty_room:
+    display_name: "值班室综合值守（睡岗+离岗）"
+    # yolov8n-pose：6.5MB，COCO-17 关键点；睡岗看头肩、离岗看 ROI 内有无人体
+    model: "weights/pose/yolov8n-pose.pt"
+    task: "pose"
+    imgsz: 640
+    conf: 0.35
+    iou: 0.45
+    classes:
+      0: "person"
+    violation_classes: [0]
+    # 姿态跟踪需要连续帧，1fps 会断 ID，所以单独给 5fps
+    sample_fps: 5
+    rules:
+      multi_rules:
+        - name: "sleep"
+          type: "posture"
+          min_consecutive_frames: 40      # 5fps × 8 秒（演示值）
+          posture:
+            metric: "head_drop"
+            threshold: -0.32
+            direction: "greater"
+          alert:
+            event_type: "sleeping_on_duty"
+            level: "high"
+            title: "疑似睡岗"
+            message: "值班人员持续低头/趴伏超过 8 秒，疑似睡岗"
+
+# ============================================================
+# 采样参数（视频抽帧）
+# ============================================================
+sampling:
+  fps: 1              # 每秒抽 1 帧（工单 02 任务 3 要求默认 1fps）
+  max_frames: 0       # 0 表示不限制
+
+# ============================================================
+# 输出目录
+# ============================================================
+output:
+  root: "outputs"
+  snapshots_dir: "outputs/events"    # 告警截图
+  reports_dir: "outputs/reports"     # 报告文件
+  videos_dir: "outputs/videos"       # 检测结果回放视频

@@ -1,0 +1,36 @@
+# 运行时依赖
+# 环境验证：Python 3.10 / Ubuntu 22.04 与 Windows 11 均可
+#
+# TensorRT 版本必须与 .engine 文件一致，否则引擎反序列化会报
+# "Version tag does not match"。换 GPU 或升级 TRT 后请用 best.pt 重新导出，
+# 见 scripts/export_engines.py。
+
+# ---------- 深度学习框架 ----------
+torch>=2.4,<2.6
+torchvision>=0.19,<0.21
+
+# ---------- 检测与推理 ----------
+ultralytics>=8.3
+onnx>=1.16
+# TensorRT 可选：只有用 .engine 时才需要，版本按你的 CUDA 环境选择
+# tensorrt==10.16.1.11
+
+# ---------- 多智能体编排 ----------
+langgraph>=1.0
+langchain-core>=1.0
+
+# ---------- 图像与视频 ----------
+opencv-python>=4.9
+numpy>=1.26
+pillow>=10.0
+
+# ---------- 配置与输出 ----------
+pyyaml>=6.0
+colorama>=0.4
+
+# ---------- Web 界面 ----------
+streamlit>=1.40
+pandas>=2.0
+
+# ---------- 可选：无 TensorRT 时的跨平台推理 ----------
+# onnxruntime-gpu>=1.18

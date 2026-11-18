@@ -1,0 +1,121 @@
+# 安防智能体 · 系统配置
+#
+# 本文件只放「与场景无关」的全局参数。
+#   模型与类别           → config/scenes.yaml
+#   五大场景规则阈值     → config/rules.yaml
+#   摄像头与 ROI         → config/cameras.yaml
+#
+# 支持环境变量替换：写法 ${VAR_NAME} 或 ${VAR_NAME:默认值}。
+
+project:
+  name: "安防智能体"
+  version: "2.0"
+  baseline: "1.0"
+  site_id: "demo_site_01"
+
+# ============================================================
+# 路径配置（相对项目根目录）
+# ============================================================
+paths:
+  models_dir: "weights"
+  videos_dir: "datasets/videos"
+  outputs_dir: "outputs"
+  snapshots_dir: "outputs/events"      # 告警截图
+  reports_dir: "outputs/reports"       # 报告文件
+  videos_out_dir: "outputs/videos"     # 检测回放视频
+  queue_dir: "outputs/queue"           # 断网事件队列（图片外置）
+  logs_dir: "outputs/logs"
+
+# ============================================================
+# 视频流读取参数（工单 02 核心）
+# ============================================================
+stream:
+  # 每秒向算法输送的帧数（工单要求 5FPS）
+  target_fps: 5
+
+  # 单路读取线程数固定为 1 路 1 线程，此值是全局上限保护
+  max_streams: 8
+
+  # 读缓冲容量。1 = 永远只保留最新帧（工单 FIFO 丢老帧要求）
+  buffer_size: 1
+
+  # 打开流的超时（毫秒）。OpenCV >= 4.5 对 FFMPEG 后端生效
+  open_timeout_ms: 5000
+  read_timeout_ms: 3000
+
+  # 断流判定：连续多久没拿到帧就认为断流（秒）
+  stall_timeout_sec: 10
+
+  # 指数退避重连序列（秒）
+  # 验收标准要求日志间隔为 1s, 2s, 4s ... 最高 60s
+  reconnect_delays: [1, 2, 4, 8, 16, 32, 60]
+  # 第几次重试失败后注册 stream_offline 告警（工单正文要求 3 次）
+  offline_after_retries: 3
+  # 恢复后连续读满多少帧才算「已恢复」
+  recover_frames: 10
+
+# ============================================================
+# 告警与上报
+# ============================================================
+alert:
+  # 钉钉/企业微信机器人地址，支持环境变量注入。
+  # 留空时只落盘（outputs/events/edge_alerts.jsonl 与 outputs/snapshots/alerts.jsonl），
+  # 填了才真正 POST；钉钉机器人记得把「安防告警」设为自定义关键词。
+  webhook_url: "${DINGDING_WEBHOOK:}"
+  webhook_timeout_sec: 5
+  # 同一目标同一场景的去重窗口（秒）
+  dedup_window_sec: 5
+  # 事件等级枚举
+  levels: ["critical", "high", "medium", "low"]
+
+# ============================================================
+# 云端协同
+# ============================================================
+cloud:
+  enabled: false
+  endpoint: "${CLOUD_ENDPOINT}"
+  api_key: "${CLOUD_API_KEY}"
+  # 单条事件上传超时
+  upload_timeout_sec: 10
+  # 重传限流（条/秒）
+  upload_rate_limit: 5
+  # 最大重试次数，超过进入 dead_letter
+  max_retry: 10
+
+# ============================================================
+# 大模型研判（云端，CPU 推理）
+# ============================================================
+llm:
+  enabled: false
+  model: "qwen2.5-7b-instruct"
+  api_base: "${LLM_API_BASE}"
+  api_key: "${LLM_API_KEY}"
+  # 硬超时（秒），超时降级为规则判定
+  timeout_sec: 8
+  # 并发上限 = max(1, CPU 核数 // 2)，填 0 表示按公式自动计算
+  concurrency: 0
+  # 低置信区间，进入大模型研判
+  review_range: [0.30, 0.85]
+
+# ============================================================
+# 日志
+# ============================================================
+logging:
+  level: "INFO"
+  console: true
+  file: "outputs/logs/security_agent.log"
+  # 日志滚动
+  max_bytes: 10485760
+  backup_count: 5
+
+# ============================================================
+# 推理运行环境
+# ============================================================
+runtime:
+  # TensorRT engine 绑定的版本，与 .engine 文件必须一致
+  tensorrt_version: "10.16.1.11"
+  device: "cuda"
+  # 是否启用 FP16
+  half: true
+  # 单帧推理超时保护（秒），超过记一次异常
+  infer_timeout_sec: 30

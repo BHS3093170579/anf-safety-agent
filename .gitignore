@@ -1,0 +1,40 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- 虚拟环境 ----
+.venv/
+venv/
+env/
+
+# ---- 密钥与本地配置 ----
+.env
+.streamlit/secrets.toml
+config/*.local.yaml
+
+# ---- 模型权重（体积大，走 Releases）----
+weights/**
+!weights/README.md
+
+# ---- 演示视频（自备）----
+datasets/videos/**
+!datasets/videos/README.md
+
+# ---- 运行产物 ----
+outputs/
+*.log
+*.jsonl
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

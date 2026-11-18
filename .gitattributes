@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+*.py     text
+*.md     text
+*.yaml   text
+*.yml    text
+*.toml   text
+*.txt    text
+
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.mp4    binary
+*.engine binary
+*.onnx   binary
+*.pt     binary

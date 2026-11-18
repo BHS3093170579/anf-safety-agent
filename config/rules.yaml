@@ -1,0 +1,156 @@
+# 安防智能体 V2.0 · 业务规则阈值
+# 工单编号：CV项目-安防智能体-02-项目初始化、配置体系与多路视频异步流读取
+#
+# 这里只放「判定阈值」，不含模型信息（模型在 scenes.yaml）。
+# 帧数单位统一按 stream.target_fps = 5FPS 换算：
+#   5 FPS × N 秒 = 5N 帧
+#
+# 每个场景都有 ticket 字段标注来源，便于答辩追溯。
+
+meta:
+  fps_baseline: 5          # 与 system.yaml 的 stream.target_fps 保持一致
+  ticket_01: "CV项目-安防智能体-01-需求分析与架构设计"
+  ticket_02: "CV项目-安防智能体-02-项目初始化、配置体系与多路视频异步流读取"
+
+# ============================================================
+# 场景 1：未佩戴安全帽（Camera_01 基坑 / Camera_02 施工大门）
+# ============================================================
+helmet:
+  camera: ["Camera_01", "Camera_02"]
+  # 模型置信度门槛
+  conf: 0.40
+  # 同一目标连续命中多少帧才出告警（去掉单帧抖动）
+  min_consecutive_frames: 2       # = 0.4 秒 @5FPS
+  # 工单 04 要求：5 帧滑窗内未戴帽 ≥3 帧才判违规
+  # 为什么用滑窗投票而不是连续帧：黄色背包、反光衣帽这类误检只闪 1~2 帧，
+  # 连续帧要求挡不住「闪 2 帧停 1 帧再闪 2 帧」，滑窗投票能挡。
+  window_frames: 5
+  abnormal_frames: 3
+  suspect_frames: 2
+  # 违规类别（对应 scenes.yaml 的 class id）
+  violation_classes: [1]
+  level: "high"
+  # 告警后的静默窗口
+  cooldown_sec: 5
+
+# ============================================================
+# 场景 2：火灾 / 烟雾（全部摄像头）
+# ============================================================
+fire:
+  camera: ["Camera_01", "Camera_02", "Camera_03"]
+  conf: 0.15
+  # 火焰烟雾是瞬时高危，命中即报
+  min_consecutive_frames: 1
+  violation_classes: [0, 1]
+  level: "critical"
+  cooldown_sec: 3
+  # 掩码面积下限（占画面比例），小于此值视为噪点
+  min_mask_area_ratio: 0.0002
+  # 掩码轮廓点数上限，控制画框开销
+  max_contour_points: 80
+
+# ============================================================
+# 场景 3：危险区域入侵（基坑、脚手架边缘 ROI）
+# ============================================================
+intrusion:
+  camera: ["Camera_01"]
+  # ROI 在 cameras.yaml 里定义
+  conf: 0.40
+  # 停留多久才告警（秒）
+  dwell_sec: 15
+  # 瞬时针穿行多久内不算（秒）
+  transient_sec: 5
+  # 脚底点落入 ROI 才算入侵（避免上半身探入误报）
+  use_bottom_center: true
+  level: "high"
+  cooldown_sec: 10
+
+# ============================================================
+# 场景 4：工友跌倒（全场景）
+# ============================================================
+fall:
+  camera: ["Camera_01", "Camera_02"]
+  conf: 0.40
+  # 躯干与竖直方向夹角阈值（度），超过视为倒地
+  theta_deg: 30
+  # 持续多久降为 medium 告警（秒）
+  medium_after_sec: 2
+  # 持续多久升为 critical 红色告警（秒）
+  critical_after_sec: 10
+  level_medium: "medium"
+  level_critical: "critical"
+  cooldown_sec: 15
+
+# ============================================================
+# 场景 5a：值班离岗（Camera_03 值班室）
+# ============================================================
+away:
+  camera: ["Camera_03"]
+  conf: 0.40
+  # 值班桌面 ROI 内无人累计多久算离岗（秒）
+  accumulate_sec: 180            # 工单要求 3 分钟
+  # 多久进入「疑似离岗」（先预警，后告警）
+  suspect_after_sec: 60
+  # 小于这个像素高度的人不算（避免远处路人干扰）
+  min_person_px: 40
+  level: "medium"
+  cooldown_sec: 60
+
+# ============================================================
+# 场景 5b：值班睡岗（Camera_03 值班室）
+# ============================================================
+sleep:
+  camera: ["Camera_03"]
+  conf: 0.40
+  # 头部下沉比：(nose.y - shoulder_mid.y) / shoulder_width
+  # 越大 = 头越低。工单 01 文档里为 -0.32 / direction=greater
+  head_drop_threshold: -0.32
+  head_drop_direction: "greater"
+  # 连续多久判睡岗
+  #   正式值：60 秒 @5FPS = 300 帧（工单要求「如连续 60 秒」）
+  #   演示值：8 秒  @5FPS = 40 帧（答辩 8 秒出效果，在 app.py 里覆盖）
+  min_consecutive_frames: 300
+  demo_min_consecutive_frames: 40
+  # 帧数→秒数换算基准，与 meta.fps_baseline 保持一致
+  fps_baseline: 5
+  level: "medium"
+  cooldown_sec: 30
+  # 离岗触发时自动挂起睡岗检测
+  suspend_when_away: true
+
+# ============================================================
+# 场景 6：门口徘徊（Camera_04 施工大门内侧）
+# ============================================================
+loiter:
+  camera: ["Camera_04"]
+  conf: 0.40
+  # 在 ROI 内累计停留多久判「徘徊」（秒）
+  loiter_sec: 20
+  # 到多少秒先给「疑似徘徊」
+  suspect_sec: 8
+  # 离开 ROI 再回来算一次折返；折返次数达到阈值也判徘徊
+  reentry_thresh: 2
+  # 框高占画面比例 < child_ratio 视为小孩，停留累计按 child_weight 衰减
+  # 目的：挡住门口小孩打闹造成的误报
+  child_ratio: 0.35
+  child_weight: 0.2
+  # 小于这个像素高度的人不算（远处路人）
+  min_person_px: 40
+  # 帧数→秒数换算基准
+  fps_baseline: 5
+  # 演示值：答辩视频只有几十秒，正式值等不到
+  demo_loiter_sec: 5
+  demo_suspect_sec: 2
+  level: "medium"
+  cooldown_sec: 30
+
+# ============================================================
+# 跨场景联动
+# ============================================================
+linkage:
+  # 跌倒 critical 时，抑制同点位其他告警多久（秒）
+  fall_suppress_others_sec: 10
+  # 火灾 critical 时，抑制安全帽告警（火灾时人人都在跑）
+  fire_suppress_helmet: true
+  # 离岗时自动挂起睡岗
+  away_suspends_sleep: true
